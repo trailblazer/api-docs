@@ -54,8 +54,12 @@ end
 # If you want Middleman to listen on a different port, you can set that below
 set :port, 4567
 
+require_relative "lib/torture_helper"
+
 helpers do
   require './lib/toc_data.rb'
+
+  include TortureHelper
 end
 
 # set :debug_assets, true

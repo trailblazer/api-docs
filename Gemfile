@@ -10,6 +10,8 @@ gem 'redcarpet', '~> 3.4.0'
 gem 'nokogiri'#, '~> 1.6.8'
 gem "sassc"
 
-gem 'sprockets', github: 'rails/sprockets'
+gem 'sprockets', git: 'https://github.com/rails/sprockets'
 
 gem "therubyracer" # makes SASS compilation fast, on Linux at least.
+
+gem "torture", path: "../torture"

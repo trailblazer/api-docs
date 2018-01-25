@@ -1,10 +1,16 @@
 GIT
-  remote: git://github.com/rails/sprockets.git
+  remote: https://github.com/rails/sprockets
   revision: 50af20cba144bb22b2c039adb21cabc1d0683d17
   specs:
     sprockets (4.0.0.beta6)
       concurrent-ruby (~> 1.0)
       rack (> 1, < 3)
+
+PATH
+  remote: ../torture
+  specs:
+    torture (0.1.0)
+      kramdown
 
 GEM
   remote: https://rubygems.org/
@@ -138,6 +144,7 @@ DEPENDENCIES
   sassc
   sprockets!
   therubyracer
+  torture!
 
 BUNDLED WITH
    1.16.1

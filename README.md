@@ -1,3 +1,5 @@
+The current `master` branch represents all documentation for the Trailblazer 2.1 suite.
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/lord/img/master/logo-slate.png" alt="Slate: API Documentation Generator" width="226">
   <br>
