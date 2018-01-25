@@ -3,7 +3,6 @@ require "torture/snippet"
 module TortureHelper
   def snippet(component, section, hide:nil)
     config = current_page.data["torture"]
-    pp config
     config = config[component]
 
     file = config [:default_file]

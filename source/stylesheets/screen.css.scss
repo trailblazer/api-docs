@@ -20,6 +20,9 @@ License for the specific language governing permissions and limitations
 under the License.
 */
 
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // GENERAL STUFF
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,6 +175,10 @@ html, body {
   .toc-h2 {
     padding-left: $nav-padding + $nav-indent;
     font-size: 12px;
+  }
+
+  .toc-h1 {
+    text-transform: uppercase;
   }
 
   .toc-footer {
