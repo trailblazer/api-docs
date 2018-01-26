@@ -86,17 +86,39 @@ The following is different from an activity.
 
 ## API
 
-### Call
-
-An operation has a very convenient interface when being used as a public entity. It is invoked with the `call` method and accepts a hash of variables. Those tuples will automatically be converted into a `Trailblazer::Context` object that is passed through the steps as the `ctx` object.
-
-***In Trailblazer 2.0, the first step argument was named `options` instead of `ctx`. This is just a convention, though, but we like `ctx` better.***
-
+## Call
 
 ```ruby
-code
+my_params = { body: "Awesome!", title: "Eh, hi" }
+
+result = Memo::Create.( params: my_params, current_user: User.find(1) )
 ```
 
+An operation has a very convenient interface when being used in public. It is invoked with the `call` method and accepts a hash of variables. The passed tuples will automatically be converted into a `Trailblazer::Context` object that is passed through the steps as the `ctx` object.
+
+***In Trailblazer 2.0, the first step argument was named `options` instead of `ctx`. This is just a convention, though, and we liked `ctx` better.***
+
+```ruby
+class Memo::Create < Trailblazer::Operation
+  step :create_model
+
+  def create_model(ctx, current_user:, **)
+    puts ctx[:params]       #=> { body: "Awesome!", title: "Eh, hi" }
+    puts ctx[:current_user] #=> #<User name: "Timo">
+    puts current_user       #=> #<User name: "Timo">
+  end
+end
+```
+
+As always, in the operation you can use the `ctx` object directly and keyword arguments. Every step receives the same `ctx` instance.
+
+When `call`ing an operation, a [`Result` object is returned](#operation-result). This is different to the lower-level activity interface.
 
 
-### Inheritance
+The `call` method also accepts containers, such as a `dry-container`. Refer to the [container section](#operation-container) to learn more about injecting additional application dependencies.
+
+## Result
+
+## Inheritance
+
+## Container

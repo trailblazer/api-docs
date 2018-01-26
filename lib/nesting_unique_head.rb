@@ -27,12 +27,6 @@ class NestingUniqueHeadCounter < Middleman::Renderers::MiddlemanRedcarpetHTML
 
 
   def triple_emphasis(text)
-    %{<aside class="notice">
-#{text}
-</aside>
-
-
-    }
-    # raise text.inspect
+    %{<aside class="notice">#{text}</aside>}
   end
 end
