@@ -1,15 +1,33 @@
 ---
-title: API Reference
+title: Trailblazer API Reference
 
 language_tabs: # must be one of https://git.io/vQNgJ
   - RUBY
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
+  - <a href='http://trailblazer.to/'>Trailblazer.to</a>
+  - <a href='https://gitter.im/trailblazer/chat'>Gitter Chat</a>
+  - <a href='https://github.com/trailblazer'>Trailblazer on Github</a>
   - <a href='https://github.com/lord/slate'>Documentation Powered by Slate</a>
 
 includes:
+  - activity
+  - operation
+  - trailblazer
+  - endpoint
+  - transform
+  - reform
+  - cells
+  - representer
+  - roar
   - workflow
+  - debugging
+  - guides
+  - examples
+  - glossary
+  - status
+  - toolchain
+  - support
 
 search: true
 
@@ -23,58 +41,6 @@ torture:
     root:         ../DOCS/trailblazer,master
 ---
 
-# Activity
+=======
 
-The activity gem provides the DSL to define workflows, and the runtime objects to execute the latter.
-
-## Overview
-
-```ruby
-<%= snippet :activity, :overview %>
-```
-> Invoking an activity works via its `call` method. The `ctx` parameter can be any kind of data structure.
-
-```ruby
-<%= snippet :activity, "overview-call" %>
-```
-
-> After the activity finishes, you can access computed data via the returned `ctx` object. The `signal` is the end _event_ the activity stopped at.
-
-```ruby
-<%= snippet :activity, "overview-result" %>
-```
-
-An activity defines a workflow for a specific business process. This can be any level of granularity, from the entire lifecycle of a user object, or validating and persisting input from a form, down to parsing and coercing a specific fragment from a document. In Trailblazer, activities are the major building block for logic.
-
-Per convention, activities are `module`s and not classes. A module in Ruby is just a namespace and not automatically supposed to be used as a mixin, which we refrain from. Instead, think of an activity module as a `module` in Elixir, which is simply a collection of stateless functions. Modules have two major benefits.
-
-* You can not subclass actitivies. This might sound counter-intuitive, but activity gives you the much more sustainable tool of compositions.
-* Modules provide `module_function` to declare every method as a class method. This makes the module more readable and allows to use `method` to attach a module method to a step.
-
-### Example
-
-In the exemplary `Memo::Update` activity, the first line extends your module and imports the DSL. Activity ships with three built-in strategies to build workflows: `Path` is designed for more linear flows, `Railway` is the [railway-oriented](https://fsharpforfunandprofit.com/rop/) two tracks flow, and `FastTrack` is the extended railway with two more "fast" tracks which was tried and tested in Trailblazer for two years and more.
-
-In the upper part sits the implementation of the actual steps. Note that these don't have to be located in the same module or class as the activity definition - this is just convenient in many cases. All methods expose the _step interface_, which is the default.
-
-In the lower part, the actual DSL defines the activity's flow. Check out the rendered diagram, it helps to understand the DSL.
-
-<img src="/images/activity-overview.png" >
-
-Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the _step interface_ returns `trusy` of `falsey` and thus instructs the activity what way to choose from here.
-
-### Definition
-
-SomeModule.method(:find)
-
-# Operation
-
-
-
-# Trailblazer
-
-# Transform
-
-# Reform
-
-# Cells
+# What is Trailblazer?
