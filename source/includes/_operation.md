@@ -82,5 +82,6 @@ The following is different from an activity.
 * **CALL API** When invoking an operation using `Create.()`, you have the "convenient" interface: pass in `:params` and other variables, and the operation will automatically create a `Context` object. This is handy when calling an operation in a controller, or a test, but gets into your way when using an operation in a compound of other activities.
 * **RESULT** Also, the operation `call` will return a `Result` object, whereas an activity simply returns following the _circuit interface_.
 * **EXTENDED RAILWAY** Whereas activities can choose their DSL strategy, an operation will always be a `FastTrack` railway with four tracks. This has been established in versions before 2.1.
+* **MACROS** Most macros are sitting in the `Trailblazer::Operation` namespace, but you can still use them in activities.
 
 Let's discuss those differences a bit more.
