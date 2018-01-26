@@ -77,19 +77,25 @@ You could build a Trailblazer application without using `Trailblazer::Operation`
 
 The following is different from an activity.
 
-* **INHERITANCE** An operation is a class, not a module. That means, you can use inheritance to derive subclasses. These [will inherit step methods](#inheritance) and activity wirings.
+* **INHERITANCE** An operation is a class, not a module. That means, you can use inheritance to derive subclasses. These [will inherit step methods](#operation-inheritance) and activity wirings.
 * **STEP DEFINITIONS** Operations provide the `step :some_method` syntax, which in turn allows to define the activity wiring _before_ implementing the methods.
-* **CALL API** When invoking an operation using `Create.()`, you have the "convenient" interface: pass in `:params` and other variables, and the operation will automatically create a `Context` object. This is handy when calling an operation in a controller, or a test, but gets into your way when using an operation in a compound of other activities.
+* **CALL API** When invoking an operation using `Create.()`, you have [the "convenient" interface](#operation-call): pass in `:params` and other variables, and the operation will automatically create a `Context` object. This is handy when calling an operation in a controller, or a test, but gets into your way when using an operation in a compound of other activities.
 * **RESULT** Also, the operation `call` will return a `Result` object, whereas an activity simply returns following the _circuit interface_.
 * **EXTENDED RAILWAY** While activities can choose their DSL strategy, an operation will always be a `FastTrack` railway with four tracks. This has been established in versions before 2.1.
 * **MACROS** Most macros are sitting in the `Trailblazer::Operation` namespace, but you can still use them in activities.
-
-Let's discuss those differences a bit more.
 
 ## API
 
 ### Call
 
+An operation has a very convenient interface when being used as a public entity. It is invoked with the `call` method and accepts a hash of variables. Those tuples will automatically be converted into a `Trailblazer::Context` object that is passed through the steps as the `ctx` object.
+
+***In Trailblazer 2.0, the first step argument was named `options` instead of `ctx`. This is just a convention, though, but we like `ctx` better.***
+
+
+```ruby
+code
+```
 
 
 

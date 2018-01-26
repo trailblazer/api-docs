@@ -1,5 +1,13 @@
 The current `master` branch represents all documentation for the Trailblazer 2.1 suite.
 
+
+## Markup
+
+* Use `***this goes into an info box***`.
+* Anchors are always 2-level, e.g. `#activity-call` and not `#activity-api-call`. This is for future compat since structuring might change, but headlines never.
+
+
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/lord/img/master/logo-slate.png" alt="Slate: API Documentation Generator" width="226">
   <br>
