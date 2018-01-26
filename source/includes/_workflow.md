@@ -1,7 +1,8 @@
 # Workflow
 
+[//]: # "FIXME - add a link"
 <aside class="notice">
-Please note that the `workflow` gem and its process engine can only be used by subscribing to a PRO or ENTE plan. ADD LINK haha
+Please note that the `workflow` gem and its process engine can only be used by subscribing to a PRO or ENTERPRISE plan.
 </aside>
 
 ## Events
