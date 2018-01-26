@@ -224,7 +224,10 @@
             <a href="#activity" class="toc-h1 toc-link" data-title="activity">Activity</a>
               <ul class="toc-list-h2">
                   <li>
-                    <a href="#overview" class="toc-h2 toc-link" data-title="overview">Overview</a>
+                    <a href="#activity-overview" class="toc-h2 toc-link" data-title="overview">Overview</a>
+                  </li>
+                  <li>
+                    <a href="#activity-api" class="toc-h2 toc-link" data-title="api">API</a>
                   </li>
               </ul>
           </li>
@@ -232,10 +235,25 @@
             <a href="#operation" class="toc-h1 toc-link" data-title="operation">Operation</a>
               <ul class="toc-list-h2">
                   <li>
-                    <a href="#single-entry-point" class="toc-h2 toc-link" data-title="single-entry-point">Single Entry Point</a>
+                    <a href="#operation-single-entry-point" class="toc-h2 toc-link" data-title="single-entry-point">Single Entry Point</a>
                   </li>
                   <li>
-                    <a href="#operation-vs-activity" class="toc-h2 toc-link" data-title="operation-vs-activity">Operation vs. Activity</a>
+                    <a href="#operation-operation-vs-activity" class="toc-h2 toc-link" data-title="operation-vs-activity">Operation vs. Activity</a>
+                  </li>
+                  <li>
+                    <a href="#operation-api" class="toc-h2 toc-link" data-title="api">API</a>
+                  </li>
+                  <li>
+                    <a href="#operation-call" class="toc-h2 toc-link" data-title="call">Call</a>
+                  </li>
+                  <li>
+                    <a href="#operation-result" class="toc-h2 toc-link" data-title="result">Result</a>
+                  </li>
+                  <li>
+                    <a href="#operation-inheritance" class="toc-h2 toc-link" data-title="inheritance">Inheritance</a>
+                  </li>
+                  <li>
+                    <a href="#operation-container" class="toc-h2 toc-link" data-title="container">Container</a>
                   </li>
               </ul>
           </li>
@@ -246,7 +264,7 @@
             <a href="#workflow" class="toc-h1 toc-link" data-title="workflow">Workflow</a>
               <ul class="toc-list-h2">
                   <li>
-                    <a href="#events" class="toc-h2 toc-link" data-title="events">Events</a>
+                    <a href="#workflow-events" class="toc-h2 toc-link" data-title="events">Events</a>
                   </li>
               </ul>
           </li>
@@ -281,7 +299,7 @@
         <p>=======</p>
 <h1 id='what-is-trailblazer'>What is Trailblazer?</h1><h1 id='activity'>Activity</h1>
 <p>The activity gem provides the DSL to define workflows, and the runtime objects to execute the latter.</p>
-<h2 id='overview'>Overview</h2><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
+<h2 id='activity-overview'>Overview</h2><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
 
   <span class="kp">module_function</span>
@@ -343,7 +361,7 @@
 <li>You can not subclass actitivies. This might sound counter-intuitive, but activity gives you the much more sustainable tool of compositions.</li>
 <li>Modules provide <code>module_function</code> to declare every method as a class method. This makes the module more readable and allows to use <code>method</code> to attach a module method to a step.</li>
 </ul>
-<h3 id='example'>Example</h3>
+<h3 id='activity-example'>Example</h3>
 <p>In the exemplary <code>Memo::Update</code> activity, the first line extends your module and imports the DSL. Activity ships with three built-in strategies to build workflows: <code>Path</code> is designed for more linear flows, <code>Railway</code> is the <a href="https://fsharpforfunandprofit.com/rop/">railway-oriented</a> two tracks flow, and <code>FastTrack</code> is the extended railway with two more &quot;fast&quot; tracks which was tried and tested in Trailblazer for two years and more.</p>
 
 <p>In the upper part sits the implementation of the actual steps. Note that these don&#39;t have to be located in the same module or class as the activity definition - this is just convenient in many cases. All methods expose the <em>step interface</em>, which is the default.</p>
@@ -353,9 +371,9 @@
 <p><img src="images/activity-overview.png" ></p>
 
 <p>Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the <em>step interface</em> returns <code>trusy</code> of <code>falsey</code> and thus instructs the activity what way to choose from here.</p>
-<h3 id='definition'>Definition</h3>
+<h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
-<h1 id='operation'>Operation</h1>
+<h2 id='activity-api'>API</h2><h3 id='activity-call'>Call</h3><h1 id='operation'>Operation</h1>
 <blockquote>
 <p>Example for an operation that doesn&#39;t use any TRB macros. It creates a fresh <code>Memo</code> instance.</p>
 </blockquote>
@@ -393,7 +411,7 @@
 <p><img src="images/action-operation.png" ></p>
 
 <p>In particular, this means that neither HTTP code nor rendering is part of an operation.</p>
-<h3 id='single-entry-point'>Single Entry Point</h3>
+<h3 id='operation-single-entry-point'>Single Entry Point</h3>
 <blockquote>
 <p>The public <code>Operation.call</code> method makes invoking operations really straight-forward.</p>
 </blockquote>
@@ -420,24 +438,44 @@
 <li>They can also be used in Rake files or CLI tools, and do exactly the same as they&#39;d do in a controller.</li>
 <li>Instead of factories that always create leaky test states, chains of operations are called to produce solid test scenarios that are identical to production environments.</li>
 </ul>
-<h2 id='operation-vs-activity'>Operation vs. Activity</h2>
+<h2 id='operation-operation-vs-activity'>Operation vs. Activity</h2>
 <p>In Trailblazer 1.x and 2.0, the <code>Operation</code> was the central notion, all was build around it. In Trailblazer 2.1, operations still exist, but they&#39;re just one piece in a huge clockwork of activities. In fact, an operation is not more than a extended API around an activity. Internally, it creates, maintains and runs an activity.</p>
 
-<p>You could build a Trailblazer application without using <code>Trailblazer::Operation</code>. This makes especially sense when using the <code>workflow</code> process engine. However, until all applications are run using this, we will keep the operation.</p>
+<p>You could build a Trailblazer application without using <code>Trailblazer::Operation</code>. This especially makes sense when using the <code>workflow</code> process engine. However, until all applications are running with workflows, we will keep the operation like a good friend.</p>
 
 <p>The following is different from an activity.</p>
 
 <ul>
-<li><strong>INHERITANCE</strong> An operation is a class, not a module. That means, you can use inheritance to derive subclasses. These will inherit step methods and activity wirings.</li>
+<li><strong>INHERITANCE</strong> An operation is a class, not a module. That means, you can use inheritance to derive subclasses. These <a href="#operation-inheritance">will inherit step methods</a> and activity wirings.</li>
 <li><strong>STEP DEFINITIONS</strong> Operations provide the <code>step :some_method</code> syntax, which in turn allows to define the activity wiring <em>before</em> implementing the methods.</li>
-<li><strong>CALL API</strong> When invoking an operation using <code>Create.()</code>, you have the &quot;convenient&quot; interface: pass in <code>:params</code> and other variables, and the operation will automatically create a <code>Context</code> object. This is handy when calling an operation in a controller, or a test, but gets into your way when using an operation in a compound of other activities.</li>
+<li><strong>CALL API</strong> When invoking an operation using <code>Create.()</code>, you have <a href="#operation-call">the &quot;convenient&quot; interface</a>: pass in <code>:params</code> and other variables, and the operation will automatically create a <code>Context</code> object. This is handy when calling an operation in a controller, or a test, but gets into your way when using an operation in a compound of other activities.</li>
 <li><strong>RESULT</strong> Also, the operation <code>call</code> will return a <code>Result</code> object, whereas an activity simply returns following the <em>circuit interface</em>.</li>
-<li><strong>EXTENDED RAILWAY</strong> Whereas activities can choose their DSL strategy, an operation will always be a <code>FastTrack</code> railway with four tracks. This has been established in versions before 2.1.</li>
+<li><strong>EXTENDED RAILWAY</strong> While activities can choose their DSL strategy, an operation will always be a <code>FastTrack</code> railway with four tracks. This has been established in versions before 2.1.</li>
 <li><strong>MACROS</strong> Most macros are sitting in the <code>Trailblazer::Operation</code> namespace, but you can still use them in activities.</li>
 </ul>
+<h2 id='operation-api'>API</h2><h2 id='operation-call'>Call</h2><pre class="highlight ruby tab-ruby"><code><span class="n">my_params</span> <span class="o">=</span> <span class="p">{</span> <span class="ss">body: </span><span class="s2">"Awesome!"</span><span class="p">,</span> <span class="ss">title: </span><span class="s2">"Eh, hi"</span> <span class="p">}</span>
 
-<p>Let&#39;s discuss those differences a bit more.</p>
-<h1 id='trailblazer'>Trailblazer</h1>
+<span class="n">result</span> <span class="o">=</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">.</span><span class="p">(</span> <span class="ss">params: </span><span class="n">my_params</span><span class="p">,</span> <span class="ss">current_user: </span><span class="no">User</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+</code></pre>
+<p>An operation has a very convenient interface when being used in public. It is invoked with the <code>call</code> method and accepts a hash of variables. The passed tuples will automatically be converted into a <code>Trailblazer::Context</code> object that is passed through the steps as the <code>ctx</code> object.</p>
+
+<p><aside class="notice">In Trailblazer 2.0, the first step argument was named <code>options</code> instead of <code>ctx</code>. This is just a convention, though, and we liked <code>ctx</code> better.</aside></p>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:create_model</span>
+
+  <span class="k">def</span> <span class="nf">create_model</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">current_user</span><span class="p">:,</span> <span class="o">**</span><span class="p">)</span>
+    <span class="nb">puts</span> <span class="n">ctx</span><span class="p">[</span><span class="ss">:params</span><span class="p">]</span>       <span class="c1">#=&gt; { body: "Awesome!", title: "Eh, hi" }</span>
+    <span class="nb">puts</span> <span class="n">ctx</span><span class="p">[</span><span class="ss">:current_user</span><span class="p">]</span> <span class="c1">#=&gt; #&lt;User name: "Timo"&gt;</span>
+    <span class="nb">puts</span> <span class="n">current_user</span>       <span class="c1">#=&gt; #&lt;User name: "Timo"&gt;</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+<p>As always, in the operation you can use the <code>ctx</code> object directly and keyword arguments. Every step receives the same <code>ctx</code> instance.</p>
+
+<p>When <code>call</code>ing an operation, a <a href="#operation-result"><code>Result</code> object is returned</a>. This is different to the lower-level activity interface.</p>
+
+<p>The <code>call</code> method also accepts containers, such as a <code>dry-container</code>. Refer to the <a href="#operation-container">container section</a> to learn more about injecting additional application dependencies.</p>
+<h2 id='operation-result'>Result</h2><h2 id='operation-inheritance'>Inheritance</h2><h2 id='operation-container'>Container</h2><h1 id='trailblazer'>Trailblazer</h1>
 <aside class="notice">
   Populate me
 </aside>
@@ -445,9 +483,9 @@
 <aside class="notice">
 Please note that the `workflow` gem and its process engine can only be used by subscribing to a PRO or ENTERPRISE plan.
 </aside>
-<h2 id='events'>Events</h2>
+<h2 id='workflow-events'>Events</h2>
 <p>In Trailblazer, triggering a throwing event via the process engine always implies resuming a process that was stopped earlier. It resumes at the resume event, which is a <em>catching event</em>.</p>
-<h3 id='explicit-event'>Explicit Event</h3><pre class="highlight ruby tab-ruby"><code><span class="p">{</span>
+<h3 id='workflow-explicit-event'>Explicit Event</h3><pre class="highlight ruby tab-ruby"><code><span class="p">{</span>
   <span class="ss">uuid: </span><span class="s2">"66f1f0b1-7fe0-46b9-85dd-37dcea3fde51"</span><span class="p">,</span>
   <span class="ss">resume_path: </span><span class="p">[</span><span class="ss">:ready_for_sign_in</span><span class="p">,</span> <span class="ss">:user_resume</span><span class="p">],</span>
   <span class="ss">data: </span><span class="p">{</span>
@@ -467,7 +505,7 @@ Please note that the `workflow` gem and its process engine can only be used by s
 <p>A setup with explicit events emulates a persistent environment, where a process runs in a &quot;real&quot; state machine from beginning to end. This is found in many Java BPMN implementations. In Trailblazer, whatsoever, until we implement a persistend process engine, we decided this semi-persistent setup is extremely flexible, quite fast and a good trade-off.</p>
 
 <p>An explicit event is always an instance of <code>Event::Throwing</code>.</p>
-<h3 id='implicit-event'>Implicit Event</h3><pre class="highlight ruby tab-ruby"><code><span class="no">Trailblazer</span><span class="o">::</span><span class="no">Workflow</span><span class="o">::</span><span class="no">Event</span><span class="p">.</span><span class="nf">implicit</span><span class="p">(</span>
+<h3 id='workflow-implicit-event'>Implicit Event</h3><pre class="highlight ruby tab-ruby"><code><span class="no">Trailblazer</span><span class="o">::</span><span class="no">Workflow</span><span class="o">::</span><span class="no">Event</span><span class="p">.</span><span class="nf">implicit</span><span class="p">(</span>
   <span class="p">[</span><span class="ss">:ready_for_signin</span><span class="p">],</span>
   <span class="p">{</span> <span class="ss">user_id: </span><span class="n">user</span><span class="p">.</span><span class="nf">id</span> <span class="p">}</span>
 <span class="p">)</span>
@@ -503,7 +541,7 @@ Please note that the `workflow` gem and its process engine can only be used by s
 <aside class="notice">
 
 </aside>
-<h4 id='test'>Test</h4>
+<h4 id='glossary-test'>Test</h4>
       </div>
       <div class="dark-box">
           <div class="lang-selector">
