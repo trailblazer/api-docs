@@ -62,6 +62,10 @@ In the lower part, the actual DSL defines the activity's flow. Check out the ren
 
 Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the _step interface_ returns `trusy` of `falsey` and thus instructs the activity what way to choose from here.
 
+### Definition
+
+SomeModule.method(:find)
+
 # Operation
 
 # Trailblazer
