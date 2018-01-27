@@ -46,3 +46,18 @@ SomeModule.method(:find)
 ### Call
 
 ## DSL
+
+
+## Path
+
+### Join
+
+```ruby
+<%= snippet :activity, "join", hide: "methods", file: "docs/path_test.rb" %>
+```
+
+An extra path can be joined with the outer activity by pointing the last (or any other) task to an existing task in the outer activity.
+
+<img src="/images/path-join.png" >
+
+Only when `find` returns the `Left` signal, the extra path is taken.
