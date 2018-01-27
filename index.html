@@ -253,12 +253,32 @@
                     <a href="#operation-container" class="toc-h2 toc-link" data-title="container">Container</a>
                   </li>
                   <li>
+                    <a href="#operation-testing" class="toc-h2 toc-link" data-title="testing">Testing</a>
+                  </li>
+                  <li>
+                    <a href="#operation-debugging" class="toc-h2 toc-link" data-title="debugging">Debugging</a>
+                  </li>
+                  <li>
                     <a href="#operation-patterns" class="toc-h2 toc-link" data-title="patterns">Patterns</a>
                   </li>
               </ul>
           </li>
           <li>
             <a href="#trailblazer" class="toc-h1 toc-link" data-title="trailblazer">Trailblazer</a>
+          </li>
+          <li>
+            <a href="#test" class="toc-h1 toc-link" data-title="test">Test</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#test-operation-tests" class="toc-h2 toc-link" data-title="operation-tests">Operation tests</a>
+                  </li>
+                  <li>
+                    <a href="#test-factory" class="toc-h2 toc-link" data-title="factory">Factory</a>
+                  </li>
+                  <li>
+                    <a href="#test-dependency-injection" class="toc-h2 toc-link" data-title="dependency-injection">Dependency Injection</a>
+                  </li>
+              </ul>
           </li>
           <li>
             <a href="#workflow" class="toc-h1 toc-link" data-title="workflow">Workflow</a>
@@ -535,7 +555,30 @@
 <p>Per convention, IDs are <code>&quot;strings&quot;</code>.</p>
 
 <!-- :override -->
-<h2 id='operation-inheritance'>Inheritance</h2><h2 id='operation-container'>Container</h2><h2 id='operation-patterns'>Patterns</h2>
+<h2 id='operation-inheritance'>Inheritance</h2><h2 id='operation-container'>Container</h2><h2 id='operation-testing'>Testing</h2>
+<blockquote>
+<p>Example of a Minitest operation test.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="n">describe</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="k">do</span>
+  <span class="n">it</span> <span class="s2">"creates a sane Memo instance"</span> <span class="k">do</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">.</span><span class="p">(</span> <span class="ss">params: </span><span class="p">{</span> <span class="ss">body: </span><span class="s2">"Enjoy an IPA"</span> <span class="p">}</span> <span class="p">)</span>
+
+    <span class="n">result</span><span class="p">.</span><span class="nf">success?</span><span class="p">.</span><span class="nf">must_equal</span> <span class="kp">true</span>
+    <span class="n">result</span><span class="p">[</span><span class="ss">:model</span><span class="p">].</span><span class="nf">body</span><span class="p">.</span><span class="nf">must_equal</span> <span class="s2">"Enjoy an IPA"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>The encapsulated concept of operations, or activities in general, makes them incredibly simple to test. You do exactly the same you would do in a controller: you call them.</p>
+
+<p>By asserting the result object and making sure the side-effects are desired, you create rock-solid components that will do exactly the same in tests and in production. Also, an operation has no idea in what environment its called, allowing you to test it in Minitest, Rspec or whatever testing framework you fancy.</p>
+
+<p>Operations can also be used as factories.</p>
+
+<p>Check out the <a href="#test"><code>trailblazer-test</code> gem</a> for advanced testing strategies, dependency injections instead of mocking, and factory chains.</p>
+
+<p>We&#39;re working on an RSpec adapter, too.</p>
+<h2 id='operation-debugging'>Debugging</h2><h3 id='operation-tracing'>Tracing</h3><h3 id='operation-taskwrap'>taskWrap</h3><h2 id='operation-patterns'>Patterns</h2>
 <p>no god object
 only flow control
 Orchestration</p>
@@ -543,7 +586,7 @@ Orchestration</p>
 <aside class="notice">
   Populate me
 </aside>
-<h1 id='workflow'>Workflow</h1>
+<h1 id='test'>Test</h1><h2 id='test-operation-tests'>Operation tests</h2><h2 id='test-factory'>Factory</h2><h2 id='test-dependency-injection'>Dependency Injection</h2><h1 id='workflow'>Workflow</h1>
 <aside class="notice">
 Please note that the `workflow` gem and its process engine can only be used by subscribing to a PRO or ENTERPRISE plan.
 </aside>
