@@ -229,6 +229,9 @@
                   <li>
                     <a href="#activity-dsl" class="toc-h2 toc-link" data-title="dsl">DSL</a>
                   </li>
+                  <li>
+                    <a href="#activity-path" class="toc-h2 toc-link" data-title="path">Path</a>
+                  </li>
               </ul>
           </li>
           <li>
@@ -398,7 +401,24 @@
 <p>Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the <em>step interface</em> returns <code>trusy</code> of <code>falsey</code> and thus instructs the activity what way to choose from here.</p>
 <h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
-<h3 id='activity-call'>Call</h3><h2 id='activity-dsl'>DSL</h2><h1 id='operation'>Operation</h1>
+<h3 id='activity-call'>Call</h3><h2 id='activity-dsl'>DSL</h2><h2 id='activity-path'>Path</h2><h3 id='activity-join'>Join</h3><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Upsert</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Path</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+
+  <span class="n">task</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Left</span><span class="p">,</span> <span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Path</span><span class="p">()</span> <span class="k">do</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Upsert</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:create</span><span class="p">)</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Upsert</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:populate</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="s2">"save"</span>
+  <span class="k">end</span>
+  <span class="n">task</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:save</span><span class="p">),</span> <span class="ss">id: </span><span class="s2">"save"</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>An extra path can be joined with the outer activity by pointing the last (or any other) task to an existing task in the outer activity.</p>
+
+<p><img src="images/path-join.png" ></p>
+
+<p>Only when <code>find</code> returns the <code>Left</code> signal, the extra path is taken.</p>
+<h1 id='operation'>Operation</h1>
 <blockquote>
 <p>Example for an operation that doesn&#39;t use any TRB macros. It creates a fresh <code>Memo</code> instance.</p>
 </blockquote>
