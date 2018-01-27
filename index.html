@@ -525,6 +525,16 @@
 <p>All semantics are identical, in particular, adding steps works via <code>step</code>, <code>pass</code> and <code>fail</code>. You may use <code>:pass_fast</code>, <code>:fail_fast</code> and <code>:fast_track</code> and leverage four tracks per default.</p>
 
 <p>Note that the step methods do not have to reside in the operation class, you can also use the <code>Module.method(:find_model)</code> trick <a href="#activity-FIXME-LINK">to compose logic</a> in operations.</p>
+<h3 id='operation-id'>ID</h3><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Update</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="no">Finder</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:find_module</span><span class="p">),</span> <span class="ss">id: </span><span class="s2">"find_module"</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+</code></pre>
+<p>The DSL tries to assign valid <code>:id</code>s to every step. Make sure to set a good name for steps that you&#39;re planning to override in subclasses or when composing: this is part of your public-private API.</p>
+
+<p>Per convention, IDs are <code>&quot;strings&quot;</code>.</p>
+
+<!-- :override -->
 <h2 id='operation-inheritance'>Inheritance</h2><h2 id='operation-container'>Container</h2><h2 id='operation-patterns'>Patterns</h2>
 <p>no god object
 only flow control
