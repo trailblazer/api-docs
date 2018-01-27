@@ -455,11 +455,12 @@
 </ul>
 <h2 id='operation-api'>API</h2><h2 id='operation-call'>Call</h2><pre class="highlight ruby tab-ruby"><code><span class="n">my_params</span> <span class="o">=</span> <span class="p">{</span> <span class="ss">body: </span><span class="s2">"Awesome!"</span><span class="p">,</span> <span class="ss">title: </span><span class="s2">"Eh, hi"</span> <span class="p">}</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">.</span><span class="p">(</span> <span class="ss">params: </span><span class="n">my_params</span><span class="p">,</span> <span class="ss">current_user: </span><span class="no">User</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">.</span><span class="p">(</span>
+  <span class="ss">params:       </span><span class="n">my_params</span><span class="p">,</span>
+  <span class="ss">current_user: </span><span class="no">User</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
 </code></pre>
 <p>An operation has a very convenient interface when being used in public. It is invoked with the <code>call</code> method and accepts a hash of variables. The passed tuples will automatically be converted into a <code>Trailblazer::Context</code> object that is passed through the steps as the <code>ctx</code> object.</p>
-
-<p><aside class="notice">In Trailblazer 2.0, the first step argument was named <code>options</code> instead of <code>ctx</code>. This is just a convention, though, and we liked <code>ctx</code> better.</aside></p>
 <pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
   <span class="n">step</span> <span class="ss">:create_model</span>
 
@@ -470,12 +471,20 @@
   <span class="k">end</span>
 <span class="k">end</span>
 </code></pre>
-<p>As always, in the operation you can use the <code>ctx</code> object directly and keyword arguments. Every step receives the same <code>ctx</code> instance.</p>
+<p><aside class="notice">Note that the API has slightly changed for a better: In 2.0, the signature was <code>call(params, options)</code>, in 2.1, it is <code>call(options)</code> with one hash, only. You have to pass <code>:params</code> in this hash</aside></p>
 
-<p>When <code>call</code>ing an operation, a <a href="#operation-result"><code>Result</code> object is returned</a>. This is different to the lower-level activity interface.</p>
+<p>As always, in the operation&#39;s steps, you can use the <code>ctx</code> object directly plus keyword arguments. Every step receives the same <code>ctx</code> instance.</p>
+
+<p>When <code>call</code>ing an operation, a <a href="#operation-result"><code>Result</code> object is returned</a>. This is different to the lower-level activity interface, which returns following the <em>circuit interface</em>.</p>
+
+<p><aside class="notice">In Trailblazer 2.0, the first step argument was named <code>options</code> instead of <code>ctx</code>. This is just a convention, though, and we liked <code>ctx</code> better.</aside></p>
 
 <p>The <code>call</code> method also accepts containers, such as a <code>dry-container</code>. Refer to the <a href="#operation-container">container section</a> to learn more about injecting additional application dependencies.</p>
-<h2 id='operation-result'>Result</h2><h2 id='operation-inheritance'>Inheritance</h2><h2 id='operation-container'>Container</h2><h1 id='trailblazer'>Trailblazer</h1>
+<h2 id='operation-result'>Result</h2>
+<p>The result object returned from <code>Operation.call</code> is a feature of operations, only. It simplifies the API slightly and helps to interpret the outcome of the operation in a convenient way.</p>
+
+<p>The result object is the only way for communicating internals to the outer side, where you, the caller, sits. This is per design: Trailblazer doesn&#39;t want you to get the operation instance or any other state, because it will lead to problems.</p>
+<h2 id='operation-inheritance'>Inheritance</h2><h2 id='operation-container'>Container</h2><h1 id='trailblazer'>Trailblazer</h1>
 <aside class="notice">
   Populate me
 </aside>
