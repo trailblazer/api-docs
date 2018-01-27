@@ -227,7 +227,7 @@
                     <a href="#activity-overview" class="toc-h2 toc-link" data-title="overview">Overview</a>
                   </li>
                   <li>
-                    <a href="#activity-api" class="toc-h2 toc-link" data-title="api">API</a>
+                    <a href="#activity-dsl" class="toc-h2 toc-link" data-title="dsl">DSL</a>
                   </li>
               </ul>
           </li>
@@ -235,13 +235,7 @@
             <a href="#operation" class="toc-h1 toc-link" data-title="operation">Operation</a>
               <ul class="toc-list-h2">
                   <li>
-                    <a href="#operation-single-entry-point" class="toc-h2 toc-link" data-title="single-entry-point">Single Entry Point</a>
-                  </li>
-                  <li>
                     <a href="#operation-operation-vs-activity" class="toc-h2 toc-link" data-title="operation-vs-activity">Operation vs. Activity</a>
-                  </li>
-                  <li>
-                    <a href="#operation-api" class="toc-h2 toc-link" data-title="api">API</a>
                   </li>
                   <li>
                     <a href="#operation-call" class="toc-h2 toc-link" data-title="call">Call</a>
@@ -250,10 +244,16 @@
                     <a href="#operation-result" class="toc-h2 toc-link" data-title="result">Result</a>
                   </li>
                   <li>
+                    <a href="#operation-dsl" class="toc-h2 toc-link" data-title="dsl">DSL</a>
+                  </li>
+                  <li>
                     <a href="#operation-inheritance" class="toc-h2 toc-link" data-title="inheritance">Inheritance</a>
                   </li>
                   <li>
                     <a href="#operation-container" class="toc-h2 toc-link" data-title="container">Container</a>
+                  </li>
+                  <li>
+                    <a href="#operation-patterns" class="toc-h2 toc-link" data-title="patterns">Patterns</a>
                   </li>
               </ul>
           </li>
@@ -378,7 +378,7 @@
 <p>Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the <em>step interface</em> returns <code>trusy</code> of <code>falsey</code> and thus instructs the activity what way to choose from here.</p>
 <h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
-<h2 id='activity-api'>API</h2><h3 id='activity-call'>Call</h3><h1 id='operation'>Operation</h1>
+<h3 id='activity-call'>Call</h3><h2 id='activity-dsl'>DSL</h2><h1 id='operation'>Operation</h1>
 <blockquote>
 <p>Example for an operation that doesn&#39;t use any TRB macros. It creates a fresh <code>Memo</code> instance.</p>
 </blockquote>
@@ -416,7 +416,7 @@
 <p><img src="images/action-operation.png" ></p>
 
 <p>In particular, this means that neither HTTP code nor rendering is part of an operation.</p>
-<h3 id='operation-single-entry-point'>Single Entry Point</h3>
+<h4 id='operation-single-entry-point'>Single Entry Point</h4>
 <blockquote>
 <p>The public <code>Operation.call</code> method makes invoking operations really straight-forward.</p>
 </blockquote>
@@ -458,7 +458,7 @@
 <li><strong>EXTENDED RAILWAY</strong> While activities can choose their DSL strategy, an operation will always be a <code>FastTrack</code> railway with four tracks. This has been established in versions before 2.1.</li>
 <li><strong>MACROS</strong> Most macros are sitting in the <code>Trailblazer::Operation</code> namespace, but you can still use them in activities.</li>
 </ul>
-<h2 id='operation-api'>API</h2><h2 id='operation-call'>Call</h2><pre class="highlight ruby tab-ruby"><code><span class="n">my_params</span> <span class="o">=</span> <span class="p">{</span> <span class="ss">body: </span><span class="s2">"Awesome!"</span><span class="p">,</span> <span class="ss">title: </span><span class="s2">"Eh, hi"</span> <span class="p">}</span>
+<h2 id='operation-call'>Call</h2><pre class="highlight ruby tab-ruby"><code><span class="n">my_params</span> <span class="o">=</span> <span class="p">{</span> <span class="ss">body: </span><span class="s2">"Awesome!"</span><span class="p">,</span> <span class="ss">title: </span><span class="s2">"Eh, hi"</span> <span class="p">}</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">.</span><span class="p">(</span>
   <span class="ss">params:       </span><span class="n">my_params</span><span class="p">,</span>
@@ -509,7 +509,27 @@
 <p>Even though you could change state (or write) on the result object, please treat it as immutable. If you need to pass on transformed state to the rendering layer, <a href="#cells-decorator">use a decorator object</a>.</p>
 
 <p>Again, the interpretation of the outcome is completely up to you. The result object represents what happened, and not what should happen now. For a generic way of <a href="#endpoint">interpreting results, use endpoints</a>.</p>
-<h2 id='operation-inheritance'>Inheritance</h2><h2 id='operation-container'>Container</h2><h1 id='trailblazer'>Trailblazer</h1>
+<h2 id='operation-dsl'>DSL</h2><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Update</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:find_model</span><span class="p">,</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:model_not_found</span><span class="p">)</span>
+  <span class="n">step</span> <span class="ss">:update</span>
+  <span class="nb">fail</span> <span class="ss">:db_error</span>
+  <span class="n">step</span> <span class="ss">:save</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>The operation exposes a minimal DSL to create the underlying activity. An operation always maintains a <code>FastTrack</code> activity and hence allows to error out, branch, etc. The operation&#39;s DSL is <a href="#activity-fasttrack">identical to <code>Activity::FastTrack</code></a>.</p>
+
+<p><img src="images/operation-end.png" ></p>
+
+<p>All semantics are identical, in particular, adding steps works via <code>step</code>, <code>pass</code> and <code>fail</code>. You may use <code>:pass_fast</code>, <code>:fail_fast</code> and <code>:fast_track</code> and leverage four tracks per default.</p>
+
+<p>Note that the step methods do not have to reside in the operation class, you can also use the <code>Module.method(:find_model)</code> trick <a href="#activity-FIXME-LINK">to compose logic</a> in operations.</p>
+<h2 id='operation-inheritance'>Inheritance</h2><h2 id='operation-container'>Container</h2><h2 id='operation-patterns'>Patterns</h2>
+<p>no god object
+only flow control
+Orchestration</p>
+<h1 id='trailblazer'>Trailblazer</h1>
 <aside class="notice">
   Populate me
 </aside>
