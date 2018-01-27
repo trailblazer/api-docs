@@ -91,12 +91,14 @@ The following is different from an activity.
 ```ruby
 my_params = { body: "Awesome!", title: "Eh, hi" }
 
-result = Memo::Create.( params: my_params, current_user: User.find(1) )
+result = Memo::Create.(
+  params:       my_params,
+  current_user: User.find(1)
+)
 ```
 
 An operation has a very convenient interface when being used in public. It is invoked with the `call` method and accepts a hash of variables. The passed tuples will automatically be converted into a `Trailblazer::Context` object that is passed through the steps as the `ctx` object.
 
-***In Trailblazer 2.0, the first step argument was named `options` instead of `ctx`. This is just a convention, though, and we liked `ctx` better.***
 
 ```ruby
 class Memo::Create < Trailblazer::Operation
@@ -110,14 +112,21 @@ class Memo::Create < Trailblazer::Operation
 end
 ```
 
-As always, in the operation you can use the `ctx` object directly and keyword arguments. Every step receives the same `ctx` instance.
+***Note that the API has slightly changed for a better: In 2.0, the signature was `call(params, options)`, in 2.1, it is `call(options)` with one hash, only. You have to pass `:params` in this hash***
 
-When `call`ing an operation, a [`Result` object is returned](#operation-result). This is different to the lower-level activity interface.
+As always, in the operation's steps, you can use the `ctx` object directly plus keyword arguments. Every step receives the same `ctx` instance.
 
+When `call`ing an operation, a [`Result` object is returned](#operation-result). This is different to the lower-level activity interface, which returns following the _circuit interface_.
+
+***In Trailblazer 2.0, the first step argument was named `options` instead of `ctx`. This is just a convention, though, and we liked `ctx` better.***
 
 The `call` method also accepts containers, such as a `dry-container`. Refer to the [container section](#operation-container) to learn more about injecting additional application dependencies.
 
 ## Result
+
+The result object returned from `Operation.call` is a feature of operations, only. It simplifies the API slightly and helps to interpret the outcome of the operation in a convenient way.
+
+The result object is the only way for communicating internals to the outer side, where you, the caller, sits. This is per design: Trailblazer doesn't want you to get the operation instance or any other state, because it will lead to problems.
 
 ## Inheritance
 
