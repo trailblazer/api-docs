@@ -47,6 +47,35 @@ SomeModule.method(:find)
 
 ## DSL
 
+## Event
+
+> Always build end instances via the `End` builder.
+
+```ruby
+evt = Trailblazer::Activity::End( semantic: :success_story )
+```
+
+> The returned signal is `evt` itself.
+
+```ruby
+signal, (ctx, flow_options) = evt.( [ctx, flow_options] )
+signal #=> #<Trailblazer::Activity::End semantic=:success_story>
+```
+
+> Use `Event#to_h` to decompose.
+
+```ruby
+evt.to_h #=> { semantic: :success_story }
+```
+
+
+Events are tasks with special semantics.
+
+* `Start` events do nothing, and always return the `Right` signal.
+* `End` events usually don't execute anything, either. An end event instance always returns itself as the signal. This allows to wire them to ongoing connections when nesting.
+
+
+
 
 ## Path
 
