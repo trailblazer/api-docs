@@ -165,6 +165,21 @@ All semantics are identical, in particular, adding steps works via `step`, `pass
 
 Note that the step methods do not have to reside in the operation class, you can also use the `Module.method(:find_model)` trick [to compose logic](#activity-FIXME-LINK) in operations.
 
+### ID
+
+```ruby
+class Memo::Update < Trailblazer::Operation
+  step Finder.method(:find_module), id: "find_module"
+  # ...
+end
+```
+
+The DSL tries to assign valid `:id`s to every step. Make sure to set a good name for steps that you're planning to override in subclasses or when composing: this is part of your public-private API.
+
+Per convention, IDs are `"strings"`.
+
+<!-- :override -->
+
 ## Inheritance
 
 ## Container
