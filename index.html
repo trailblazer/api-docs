@@ -230,6 +230,9 @@
                     <a href="#activity-dsl" class="toc-h2 toc-link" data-title="dsl">DSL</a>
                   </li>
                   <li>
+                    <a href="#activity-event" class="toc-h2 toc-link" data-title="event">Event</a>
+                  </li>
+                  <li>
                     <a href="#activity-path" class="toc-h2 toc-link" data-title="path">Path</a>
                   </li>
               </ul>
@@ -401,7 +404,30 @@
 <p>Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the <em>step interface</em> returns <code>trusy</code> of <code>falsey</code> and thus instructs the activity what way to choose from here.</p>
 <h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
-<h3 id='activity-call'>Call</h3><h2 id='activity-dsl'>DSL</h2><h2 id='activity-path'>Path</h2><h3 id='activity-join'>Join</h3><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Upsert</span>
+<h3 id='activity-call'>Call</h3><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
+<blockquote>
+<p>Always build end instances via the <code>End</code> builder.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="n">evt</span> <span class="o">=</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">End</span><span class="p">(</span> <span class="ss">semantic: :success_story</span> <span class="p">)</span>
+</code></pre>
+<blockquote>
+<p>The returned signal is <code>evt</code> itself.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="n">signal</span><span class="p">,</span> <span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">)</span> <span class="o">=</span> <span class="n">evt</span><span class="o">.</span><span class="p">(</span> <span class="p">[</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">]</span> <span class="p">)</span>
+<span class="n">signal</span> <span class="c1">#=&gt; #&lt;Trailblazer::Activity::End semantic=:success_story&gt;</span>
+</code></pre>
+<blockquote>
+<p>Use <code>Event#to_h</code> to decompose.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="n">evt</span><span class="p">.</span><span class="nf">to_h</span> <span class="c1">#=&gt; { semantic: :success_story }</span>
+</code></pre>
+<p>Events are tasks with special semantics.</p>
+
+<ul>
+<li><code>Start</code> events do nothing, and always return the <code>Right</code> signal.</li>
+<li><code>End</code> events usually don&#39;t execute anything, either. An end event instance always returns itself as the signal. This allows to wire them to ongoing connections when nesting.</li>
+</ul>
+<h2 id='activity-path'>Path</h2><h3 id='activity-join'>Join</h3><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Upsert</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Path</span><span class="p">()</span>
   <span class="c1"># ...</span>
 
