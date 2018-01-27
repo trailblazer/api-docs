@@ -39,7 +39,7 @@ The goal of an operation is to encapsulate all business logic of one feature in 
 
 In particular, this means that neither HTTP code nor rendering is part of an operation.
 
-### Single Entry Point
+#### Single Entry Point
 
 > The public `Operation.call` method makes invoking operations really straight-forward.
 
@@ -83,8 +83,6 @@ The following is different from an activity.
 * **RESULT** Also, the operation `call` will return a `Result` object, whereas an activity simply returns following the _circuit interface_.
 * **EXTENDED RAILWAY** While activities can choose their DSL strategy, an operation will always be a `FastTrack` railway with four tracks. This has been established in versions before 2.1.
 * **MACROS** Most macros are sitting in the `Trailblazer::Operation` namespace, but you can still use them in activities.
-
-## API
 
 ## Call
 
@@ -153,6 +151,26 @@ Even though you could change state (or write) on the result object, please treat
 
 Again, the interpretation of the outcome is completely up to you. The result object represents what happened, and not what should happen now. For a generic way of [interpreting results, use endpoints](#endpoint).
 
+## DSL
+
+```ruby
+<%= snippet :operation, "end", hide: "methods" %>
+```
+
+The operation exposes a minimal DSL to create the underlying activity. An operation always maintains a `FastTrack` activity and hence allows to error out, branch, etc. The operation's DSL is [identical to `Activity::FastTrack`](#activity-fasttrack).
+
+<img src="/images/operation-end.png" >
+
+All semantics are identical, in particular, adding steps works via `step`, `pass` and `fail`. You may use `:pass_fast`, `:fail_fast` and `:fast_track` and leverage four tracks per default.
+
+Note that the step methods do not have to reside in the operation class, you can also use the `Module.method(:find_model)` trick [to compose logic](#activity-FIXME-LINK) in operations.
+
 ## Inheritance
 
 ## Container
+
+## Patterns
+
+no god object
+only flow control
+Orchestration
