@@ -124,9 +124,34 @@ The `call` method also accepts containers, such as a `dry-container`. Refer to t
 
 ## Result
 
+```ruby
+result = Memo::Create.( params: params, current_user: User.find(1) )
+```
+
+> You can ask about the outcome of the operation via `success?` and `failure?`.
+
+```ruby
+result.success? #=> true
+result.failure? #=> false
+```
+
+> You can query the result object for all variables in `ctx`.
+
+```ruby
+result[:model]             #=> #<Memo body="Awesome!">
+result["contract.default"] #=> #<Reform::Form ...>
+result[:current_user]      #=> #<User id=1>
+```
+
 The result object returned from `Operation.call` is a feature of operations, only. It simplifies the API slightly and helps to interpret the outcome of the operation in a convenient way.
 
 The result object is the only way for communicating internals to the outer side, where you, the caller, sits. This is per design: Trailblazer doesn't want you to get the operation instance or any other state, because it will lead to problems.
+
+Whatever is written to the `ctx` object passed from step to step will be readable via the result object. String keys and symbol keys are different. Note that macros, other steps or nested activities might have written to `ctx` as well.
+
+Even though you could change state (or write) on the result object, please treat it as immutable. If you need to pass on transformed state to the rendering layer, [use a decorator object](#cells-decorator).
+
+Again, the interpretation of the outcome is completely up to you. The result object represents what happened, and not what should happen now. For a generic way of [interpreting results, use endpoints](#endpoint).
 
 ## Inheritance
 

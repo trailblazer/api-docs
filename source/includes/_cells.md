@@ -4,3 +4,5 @@
 <aside class="notice">
   Populate me
 </aside>
+
+## Decorator
