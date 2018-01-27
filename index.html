@@ -279,6 +279,11 @@
           </li>
           <li>
             <a href="#cells" class="toc-h1 toc-link" data-title="cells">Cells</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#cells-decorator" class="toc-h2 toc-link" data-title="decorator">Decorator</a>
+                  </li>
+              </ul>
           </li>
           <li>
             <a href="#debugging" class="toc-h1 toc-link" data-title="debugging">Debugging</a>
@@ -480,10 +485,30 @@
 <p><aside class="notice">In Trailblazer 2.0, the first step argument was named <code>options</code> instead of <code>ctx</code>. This is just a convention, though, and we liked <code>ctx</code> better.</aside></p>
 
 <p>The <code>call</code> method also accepts containers, such as a <code>dry-container</code>. Refer to the <a href="#operation-container">container section</a> to learn more about injecting additional application dependencies.</p>
-<h2 id='operation-result'>Result</h2>
+<h2 id='operation-result'>Result</h2><pre class="highlight ruby tab-ruby"><code><span class="n">result</span> <span class="o">=</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">.</span><span class="p">(</span> <span class="ss">params: </span><span class="n">params</span><span class="p">,</span> <span class="ss">current_user: </span><span class="no">User</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+</code></pre>
+<blockquote>
+<p>You can ask about the outcome of the operation via <code>success?</code> and <code>failure?</code>.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="n">result</span><span class="p">.</span><span class="nf">success?</span> <span class="c1">#=&gt; true</span>
+<span class="n">result</span><span class="p">.</span><span class="nf">failure?</span> <span class="c1">#=&gt; false</span>
+</code></pre>
+<blockquote>
+<p>You can query the result object for all variables in <code>ctx</code>.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="n">result</span><span class="p">[</span><span class="ss">:model</span><span class="p">]</span>             <span class="c1">#=&gt; #&lt;Memo body="Awesome!"&gt;</span>
+<span class="n">result</span><span class="p">[</span><span class="s2">"contract.default"</span><span class="p">]</span> <span class="c1">#=&gt; #&lt;Reform::Form ...&gt;</span>
+<span class="n">result</span><span class="p">[</span><span class="ss">:current_user</span><span class="p">]</span>      <span class="c1">#=&gt; #&lt;User id=1&gt;</span>
+</code></pre>
 <p>The result object returned from <code>Operation.call</code> is a feature of operations, only. It simplifies the API slightly and helps to interpret the outcome of the operation in a convenient way.</p>
 
 <p>The result object is the only way for communicating internals to the outer side, where you, the caller, sits. This is per design: Trailblazer doesn&#39;t want you to get the operation instance or any other state, because it will lead to problems.</p>
+
+<p>Whatever is written to the <code>ctx</code> object passed from step to step will be readable via the result object. String keys and symbol keys are different. Note that macros, other steps or nested activities might have written to <code>ctx</code> as well.</p>
+
+<p>Even though you could change state (or write) on the result object, please treat it as immutable. If you need to pass on transformed state to the rendering layer, <a href="#cells-decorator">use a decorator object</a>.</p>
+
+<p>Again, the interpretation of the outcome is completely up to you. The result object represents what happened, and not what should happen now. For a generic way of <a href="#endpoint">interpreting results, use endpoints</a>.</p>
 <h2 id='operation-inheritance'>Inheritance</h2><h2 id='operation-container'>Container</h2><h1 id='trailblazer'>Trailblazer</h1>
 <aside class="notice">
   Populate me
@@ -542,7 +567,7 @@ Please note that the `workflow` gem and its process engine can only be used by s
 <aside class="notice">
   Populate me
 </aside>
-<h1 id='debugging'>Debugging</h1>
+<h2 id='cells-decorator'>Decorator</h2><h1 id='debugging'>Debugging</h1>
 <aside class="notice">
   Best practices for debugging TRB apps. Also trailblazer-developer when it's ready.
 </aside>
