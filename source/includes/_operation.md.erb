@@ -184,6 +184,30 @@ Per convention, IDs are `"strings"`.
 
 ## Container
 
+## Testing
+
+> Example of a Minitest operation test.
+
+```ruby
+<%= snippet :operation, "describe", file: "docs/operation_test.rb" %>
+```
+
+The encapsulated concept of operations, or activities in general, makes them incredibly simple to test. You do exactly the same you would do in a controller: you call them.
+
+By asserting the result object and making sure the side-effects are desired, you create rock-solid components that will do exactly the same in tests and in production. Also, an operation has no idea in what environment its called, allowing you to test it in Minitest, Rspec or whatever testing framework you fancy.
+
+Operations can also be used as factories.
+
+Check out the [`trailblazer-test` gem](#test) for advanced testing strategies, dependency injections instead of mocking, and factory chains.
+
+We're working on an RSpec adapter, too.
+
+## Debugging
+
+### Tracing
+
+### taskWrap
+
 ## Patterns
 
 no god object
