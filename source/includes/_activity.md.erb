@@ -60,6 +60,8 @@ Let's look at this diagram again, with correct annotations, outputs and semantic
 
 Oh, wow, that's actually more confusing. Anyway, this diagram contains all annotations used in Trailblazer's activities: outputs with semantic and signals. For a better understanding of the whole picture we should break it down to one task, first.
 
+<img src="/images/activity-anatomy-4.png" >
+
 > The `policy` task returning a specific signal. This is the low-level version of a task, called the _task interface_.
 
 ```ruby
@@ -72,14 +74,41 @@ def policy( (ctx, flow_options), **)
 end
 ```
 
-<img src="/images/activity-anatomy-4.png" >
 
-A task can have different outputs. Every output is defined by a _semantic_ (for example `:success`) and a _signal_. Remember, a plain task is always a piece of Ruby code. The task can pick what output to take by returning the output's respective signal.
+A task can have different outputs. Every output is defined by a _semantic_ (for example `:success`) and a _signal_.
 
-Both semantic and signal are completely arbitrary and you can use whatever you feel makes sense. Historically, Trailblazer uses the `Right` signal for outputs with the `:success` semantic, and `Left` for `:failure`. Also note that even the semantic (e.g. `:success`) doesn't have any meaning except for the modelling.
+Both semantic and signal are completely arbitrary and you can use whatever you feel makes sense. Historically, Trailblazer uses the `Right` signal for outputs with the `:success` semantic, and `Left` for `:failure`. Also note that even the semantic (e.g. `:success`) doesn't have any meaning except for the modelling. And you can have as many outputs as you need from a task.
+
+Now, why not relate this to some code? Remember, a plain task is always a piece of Ruby code. The task can pick what output to take by returning the output's respective signal.
+
 
 ***Note that the terms _output_ and _semantic_ are inventions of Trailblazer and not part of BPMN.***
 
+With nested activities, it's slightly different. Since the last task will be an end event, it's this very end event to decide what signal to emit. End events always [return themselves as the signal](#activity-event).
+
+### Outputs and Semantics
+
+```ruby
+module Memo::Create
+  extend Trailblazer::Activity::Path()
+
+  task method(:policy),
+    Output(:failure) => "log_error"
+  task method(:log_error), id: "log_error", magnetic_to: [],
+    Output(:success) => End(:policy_failure)
+end
+```
+
+> Both tasks could be wired without knowing what signal they emit, just by referencing standard semantics of their outputs.
+
+
+Having defined tasks with outputs, where an output emits a specific signal, an activity modeller's job is now to specify what output gets connected to what further connection.
+
+This is where the semantic of an output comes into play. A modeller can connect, say, the `:failure` output of a task with an error handler, and then with an erroring end event, without knowing about the underlying signals. This allows Trailblazer to expose a generic modelling API.
+
+<img src="/images/activity-anatomy-5.png" >
+
+All mentioned modelling concepts will be explained in detail in the following sections.
 
 
 ### Definition
