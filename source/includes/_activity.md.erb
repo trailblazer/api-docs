@@ -38,6 +38,15 @@ In the lower part, the actual DSL defines the activity's flow. Check out the ren
 
 Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the _step interface_ returns `trusy` of `falsey` and thus instructs the activity what way to choose from here.
 
+## Anatomy
+
+An activity is a set of tasks, with at least one start event and one or multiple end events. A task can be any Ruby callable that follows the _task interface_, or another activity itself.
+
+***We found the [BPMN specification](http://www.bpmn.org/) to be very elegant for describing business processes, that's why Trailblazer picked up a subset of its lingo and concepts. The way we've integrated TRB and BPMN is intuitive, so you're not required to [read 538 pages specs](http://www.omg.org/spec/BPMN/2.0/PDF).***
+
+
+
+
 ### Definition
 
 SomeModule.method(:find)
