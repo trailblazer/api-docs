@@ -425,6 +425,8 @@
 
 <p>Oh, wow, that&#39;s actually more confusing. Anyway, this diagram contains all annotations used in Trailblazer&#39;s activities: outputs with semantic and signals. For a better understanding of the whole picture we should break it down to one task, first.</p>
 
+<p><img src="images/activity-anatomy-4.png" ></p>
+
 <blockquote>
 <p>The <code>policy</code> task returning a specific signal. This is the low-level version of a task, called the <em>task interface</em>.</p>
 </blockquote>
@@ -436,13 +438,35 @@
   <span class="k">return</span> <span class="n">signal</span><span class="p">,</span> <span class="p">[</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">]</span>
 <span class="k">end</span>
 </code></pre>
-<p><img src="images/activity-anatomy-4.png" ></p>
+<p>A task can have different outputs. Every output is defined by a <em>semantic</em> (for example <code>:success</code>) and a <em>signal</em>.</p>
 
-<p>A task can have different outputs. Every output is defined by a <em>semantic</em> (for example <code>:success</code>) and a <em>signal</em>. Remember, a plain task is always a piece of Ruby code. The task can pick what output to take by returning the output&#39;s respective signal.</p>
+<p>Both semantic and signal are completely arbitrary and you can use whatever you feel makes sense. Historically, Trailblazer uses the <code>Right</code> signal for outputs with the <code>:success</code> semantic, and <code>Left</code> for <code>:failure</code>. Also note that even the semantic (e.g. <code>:success</code>) doesn&#39;t have any meaning except for the modelling. And you can have as many outputs as you need from a task.</p>
 
-<p>Both semantic and signal are completely arbitrary and you can use whatever you feel makes sense. Historically, Trailblazer uses the <code>Right</code> signal for outputs with the <code>:success</code> semantic, and <code>Left</code> for <code>:failure</code>. Also note that even the semantic (e.g. <code>:success</code>) doesn&#39;t have any meaning except for the modelling.</p>
+<p>Now, why not relate this to some code? Remember, a plain task is always a piece of Ruby code. The task can pick what output to take by returning the output&#39;s respective signal.</p>
 
 <p><aside class="notice">Note that the terms <em>output</em> and <em>semantic</em> are inventions of Trailblazer and not part of BPMN.</aside></p>
+
+<p>With nested activities, it&#39;s slightly different. Since the last task will be an end event, it&#39;s this very end event to decide what signal to emit. End events always <a href="#activity-event">return themselves as the signal</a>.</p>
+<h3 id='activity-outputs-and-semantics'>Outputs and Semantics</h3><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Path</span><span class="p">()</span>
+
+  <span class="n">task</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">),</span>
+    <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="s2">"log_error"</span>
+  <span class="n">task</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:log_error</span><span class="p">),</span> <span class="ss">id: </span><span class="s2">"log_error"</span><span class="p">,</span> <span class="ss">magnetic_to: </span><span class="p">[],</span>
+    <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:policy_failure</span><span class="p">)</span>
+<span class="k">end</span>
+</code></pre>
+<blockquote>
+<p>Both tasks could be wired without knowing what signal they emit, just by referencing standard semantics of their outputs.</p>
+</blockquote>
+
+<p>Having defined tasks with outputs, where an output emits a specific signal, an activity modeller&#39;s job is now to specify what output gets connected to what further connection.</p>
+
+<p>This is where the semantic of an output comes into play. A modeller can connect, say, the <code>:failure</code> output of a task with an error handler, and then with an erroring end event, without knowing about the underlying signals. This allows Trailblazer to expose a generic modelling API.</p>
+
+<p><img src="images/activity-anatomy-5.png" ></p>
+
+<p>All mentioned modelling concepts will be explained in detail in the following sections.</p>
 <h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
 <h3 id='activity-call'>Call</h3><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
