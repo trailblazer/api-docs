@@ -227,6 +227,9 @@
                     <a href="#activity-overview" class="toc-h2 toc-link" data-title="overview">Overview</a>
                   </li>
                   <li>
+                    <a href="#activity-anatomy" class="toc-h2 toc-link" data-title="anatomy">Anatomy</a>
+                  </li>
+                  <li>
                     <a href="#activity-dsl" class="toc-h2 toc-link" data-title="dsl">DSL</a>
                   </li>
                   <li>
@@ -327,8 +330,7 @@
     <div class="page-wrapper">
       <div class="dark-box"></div>
       <div class="content">
-        <p>=======</p>
-<h1 id='what-is-trailblazer'>What is Trailblazer?</h1><h1 id='activity'>Activity</h1>
+        <h1 id='what-is-trailblazer'>What is Trailblazer?</h1><h1 id='activity'>Activity</h1>
 <p>The activity gem provides the DSL to define workflows, and the runtime objects to execute the latter.</p>
 <h2 id='activity-overview'>Overview</h2><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
@@ -402,6 +404,10 @@
 <p><img src="images/activity-overview.png" ></p>
 
 <p>Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the <em>step interface</em> returns <code>trusy</code> of <code>falsey</code> and thus instructs the activity what way to choose from here.</p>
+<h2 id='activity-anatomy'>Anatomy</h2>
+<p>An activity is a set of tasks, with at least one start event and one or multiple end events. A task can be any Ruby callable that follows the <em>task interface</em>, or another activity itself.</p>
+
+<p><aside class="notice">We found the <a href="http://www.bpmn.org/">BPMN specification</a> to be very elegant for describing business processes, that&#39;s why Trailblazer picked up a subset of its lingo and concepts. The way we&#39;ve integrated TRB and BPMN is intuitive, so you&#39;re not required to <a href="http://www.omg.org/spec/BPMN/2.0/PDF">read 538 pages specs</a>.</aside></p>
 <h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
 <h3 id='activity-call'>Call</h3><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
@@ -424,8 +430,8 @@
 <p>Events are tasks with special semantics.</p>
 
 <ul>
-<li><code>Start</code> events do nothing, and always return the <code>Right</code> signal.</li>
-<li><code>End</code> events usually don&#39;t execute anything, either. An end event instance always returns itself as the signal. This allows to wire them to ongoing connections when nesting.</li>
+<li><code>Start</code> events do nothing, and always return the <code>Right</code> signal. Every activity begins with one or multiple start events.</li>
+<li><code>End</code> events usually don&#39;t execute anything, either. An end event instance always returns itself as the signal. This allows to wire them to ongoing connections when nesting. End events mark the end of activity paths, and might also be used for suspending an activity as we do <a href="#workflow">in the <code>workflow</code> gem</a>.</li>
 </ul>
 <h2 id='activity-path'>Path</h2><h3 id='activity-join'>Join</h3><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Upsert</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Path</span><span class="p">()</span>
