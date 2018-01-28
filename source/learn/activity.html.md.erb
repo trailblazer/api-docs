@@ -1,0 +1,67 @@
+---
+title: Trailblazer | LEARN
+
+language_tabs:
+  - RUBY
+
+toc_footers:
+  - <a href='https://gitter.im/trailblazer/chat'>Gitter Chat</a>
+  - <a href='https://github.com/trailblazer'>Trailblazer on Github</a>
+  - <a href='https://github.com/lord/slate'>Documentation Powered by Slate</a>
+---
+
+# Snippets
+
+## Conditional Transformation
+
+Some notes about more complex activities. Will clean up and describe soon.
+
+> Without Path() - WIP
+
+```ruby
+
+module UnitPriceOrNestedItems2
+  extend Activity::Path()
+
+  task Parse::Hash::Step::Read.new(name: :unit_price), Output(:failure) => :items_track
+  task task: PriceFloat, PriceFloat.outputs[:fail_fast] => :items_track, PriceFloat.outputs[:failure] => :failure
+  task Steps.method(:set)
+
+  task UnitPriceOrItems.method(:items_present?), magnetic_to: [:items_track], Output(:success) => :items_track, Output(:failure) => :required
+  task Parse::Hash::Step::Read.new(name: :items), magnetic_to: [:items_track], Output(:success) => :items_track, Output(:failure) => :failure
+  task Collection, magnetic_to: [:items_track], Output(:success) => :items_track, Output(:failure) => :failure
+  task UnitPriceOrNestedItems.method(:set_items), magnetic_to: [:items_track]
+
+  task UnitPriceOrNestedItems.method(:error_required), magnetic_to: [:required], Output(:success) => :required
+
+  task task: End(:failure), magnetic_to: [:failure], type: :End
+  task task: End(:required), magnetic_to: [:required], type: :End
+end
+```
+
+
+> With Path() - WIP
+
+```ruby
+module UnitPriceOrNestedItems3
+  extend Activity::Path()
+
+  task Parse::Hash::Step::Read.new(name: :unit_price), Output(:failure) => Path( track_color: :items_track ) do
+    task UnitPriceOrItems.method(:items_present?), Output(:failure) => :required, id: "items_present?"
+    task Parse::Hash::Step::Read.new(name: :items), Output(:failure) => :failure
+    task Collection, Output(:failure) => :failure
+    task UnitPriceOrNestedItems.method(:set_items), Output(:success) => "End.success"
+  end
+
+  task task: PriceFloat, PriceFloat.outputs[:fail_fast] => "items_present?", PriceFloat.outputs[:failure] => :failure
+  task Steps.method(:set)
+
+
+  task UnitPriceOrNestedItems.method(:error_required), magnetic_to: [:required], Output(:success) => :required
+
+  task task: End(:failure), magnetic_to: [:failure], type: :End
+  task task: End(:required), magnetic_to: [:required], type: :End
+end
+```
+
+<img src="/images/learn-activity-transform.png" >

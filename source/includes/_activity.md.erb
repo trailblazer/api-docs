@@ -71,10 +71,8 @@ evt.to_h #=> { semantic: :success_story }
 
 Events are tasks with special semantics.
 
-* `Start` events do nothing, and always return the `Right` signal.
-* `End` events usually don't execute anything, either. An end event instance always returns itself as the signal. This allows to wire them to ongoing connections when nesting.
-
-
+* `Start` events do nothing, and always return the `Right` signal. Every activity begins with one or multiple start events.
+* `End` events usually don't execute anything, either. An end event instance always returns itself as the signal. This allows to wire them to ongoing connections when nesting. End events mark the end of activity paths, and might also be used for suspending an activity as we do [in the `workflow` gem](#workflow).
 
 
 ## Path
