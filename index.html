@@ -405,7 +405,11 @@
 
 <p>Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the <em>step interface</em> returns <code>trusy</code> of <code>falsey</code> and thus instructs the activity what way to choose from here.</p>
 <h2 id='activity-anatomy'>Anatomy</h2>
-<p>An activity is a set of tasks, with at least one start event and one or multiple end events. A task can be any Ruby callable that follows the <em>task interface</em>, or another activity itself.</p>
+<p>An activity is a set of tasks, with at least one start event and one or multiple end events. A task can be any Ruby callable that follows the <em>task interface</em>, and even another activity itself.</p>
+
+<p><img src="images/activity-anatomy-1.png" ></p>
+
+<p>In other words, an activity is a container, and tasks are the boxes contained by it.</p>
 
 <p><aside class="notice">We found the <a href="http://www.bpmn.org/">BPMN specification</a> to be very elegant for describing business processes, that&#39;s why Trailblazer picked up a subset of its lingo and concepts. The way we&#39;ve integrated TRB and BPMN is intuitive, so you&#39;re not required to <a href="http://www.omg.org/spec/BPMN/2.0/PDF">read 538 pages specs</a>.</aside></p>
 <h3 id='activity-definition'>Definition</h3>
