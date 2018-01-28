@@ -44,9 +44,42 @@ An activity is a set of tasks, with at least one start event and one or multiple
 
 <img src="/images/activity-anatomy-1.png" >
 
-In other words, an activity is a container, and tasks are the boxes contained by it.
+In other words, an activity is a container, and tasks are the boxes contained in it. What you see above is actually an incorrect representation, as it doesn't name outputs or signals. We use it all the time, though, since those outputs can be inferred easily. Intuitively, you understand what this activity will do, and that the `save` task can have a successful and a failing outcome.
 
-***We found the [BPMN specification](http://www.bpmn.org/) to be very elegant for describing business processes, that's why Trailblazer picked up a subset of its lingo and concepts. The way we've integrated TRB and BPMN is intuitive, so you're not required to [read 538 pages specs](http://www.omg.org/spec/BPMN/2.0/PDF).***
+***We found the [BPMN specification](http://www.bpmn.org/) to be very elegant for describing business processes, that's why Trailblazer picked up a subset of its lingo and concepts. The way we've integrated TRB and BPMN is straight-forward, so you're not required to [read 538 pages specs](http://www.omg.org/spec/BPMN/2.0/PDF).***
+
+Here's a another representation of a different activity, one that uses the above activity we just defined as a nested task.
+
+<img src="/images/activity-anatomy-2.png" >
+
+Nested activities (in BPMN they're called _subprocess_), are marked by the `[+]` symbol in the box. As you can see, both outgoing connections from the nested `<update>` activity need to be wired to _something_ in the outer workflow. In this example, the "failure" output of the nested `<update>` activity is wired to the `End.failure` end event.
+
+Let's look at this diagram again, with correct annotations, outputs and semantics. All those new terms will become a bit clearer in a bit.
+
+<img src="/images/activity-anatomy-3.png" >
+
+Oh, wow, that's actually more confusing. Anyway, this diagram contains all annotations used in Trailblazer's activities: outputs with semantic and signals. For a better understanding of the whole picture we should break it down to one task, first.
+
+> The `policy` task returning a specific signal. This is the low-level version of a task, called the _task interface_.
+
+```ruby
+def policy( (ctx, flow_options), **)
+  signal = ctx[:current_user].nil? ?
+    Trailblazer::Activity::Left :
+    Trailblazer::Activity::Right
+
+  return signal, [ctx, flow_options]
+end
+```
+
+<img src="/images/activity-anatomy-4.png" >
+
+A task can have different outputs. Every output is defined by a _semantic_ (for example `:success`) and a _signal_. Remember, a plain task is always a piece of Ruby code. The task can pick what output to take by returning the output's respective signal.
+
+Both semantic and signal are completely arbitrary and you can use whatever you feel makes sense. Historically, Trailblazer uses the `Right` signal for outputs with the `:success` semantic, and `Left` for `:failure`. Also note that even the semantic (e.g. `:success`) doesn't have any meaning except for the modelling.
+
+***Note that the terms _output_ and _semantic_ are inventions of Trailblazer and not part of BPMN.***
+
 
 
 ### Definition
