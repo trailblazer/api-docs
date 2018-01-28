@@ -409,9 +409,40 @@
 
 <p><img src="images/activity-anatomy-1.png" ></p>
 
-<p>In other words, an activity is a container, and tasks are the boxes contained by it.</p>
+<p>In other words, an activity is a container, and tasks are the boxes contained in it. What you see above is actually an incorrect representation, as it doesn&#39;t name outputs or signals. We use it all the time, though, since those outputs can be inferred easily. Intuitively, you understand what this activity will do, and that the <code>save</code> task can have a successful and a failing outcome.</p>
 
-<p><aside class="notice">We found the <a href="http://www.bpmn.org/">BPMN specification</a> to be very elegant for describing business processes, that&#39;s why Trailblazer picked up a subset of its lingo and concepts. The way we&#39;ve integrated TRB and BPMN is intuitive, so you&#39;re not required to <a href="http://www.omg.org/spec/BPMN/2.0/PDF">read 538 pages specs</a>.</aside></p>
+<p><aside class="notice">We found the <a href="http://www.bpmn.org/">BPMN specification</a> to be very elegant for describing business processes, that&#39;s why Trailblazer picked up a subset of its lingo and concepts. The way we&#39;ve integrated TRB and BPMN is straight-forward, so you&#39;re not required to <a href="http://www.omg.org/spec/BPMN/2.0/PDF">read 538 pages specs</a>.</aside></p>
+
+<p>Here&#39;s a another representation of a different activity, one that uses the above activity we just defined as a nested task.</p>
+
+<p><img src="images/activity-anatomy-2.png" ></p>
+
+<p>Nested activities (in BPMN they&#39;re called <em>subprocess</em>), are marked by the <code>[+]</code> symbol in the box. As you can see, both outgoing connections from the nested <code>&lt;update&gt;</code> activity need to be wired to <em>something</em> in the outer workflow. In this example, the &quot;failure&quot; output of the nested <code>&lt;update&gt;</code> activity is wired to the <code>End.failure</code> end event.</p>
+
+<p>Let&#39;s look at this diagram again, with correct annotations, outputs and semantics. All those new terms will become a bit clearer in a bit.</p>
+
+<p><img src="images/activity-anatomy-3.png" ></p>
+
+<p>Oh, wow, that&#39;s actually more confusing. Anyway, this diagram contains all annotations used in Trailblazer&#39;s activities: outputs with semantic and signals. For a better understanding of the whole picture we should break it down to one task, first.</p>
+
+<blockquote>
+<p>The <code>policy</code> task returning a specific signal. This is the low-level version of a task, called the <em>task interface</em>.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">def</span> <span class="nf">policy</span><span class="p">(</span> <span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">),</span> <span class="o">**</span><span class="p">)</span>
+  <span class="n">signal</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="ss">:current_user</span><span class="p">].</span><span class="nf">nil?</span> <span class="p">?</span>
+    <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Left</span> <span class="p">:</span>
+    <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Right</span>
+
+  <span class="k">return</span> <span class="n">signal</span><span class="p">,</span> <span class="p">[</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">]</span>
+<span class="k">end</span>
+</code></pre>
+<p><img src="images/activity-anatomy-4.png" ></p>
+
+<p>A task can have different outputs. Every output is defined by a <em>semantic</em> (for example <code>:success</code>) and a <em>signal</em>. Remember, a plain task is always a piece of Ruby code. The task can pick what output to take by returning the output&#39;s respective signal.</p>
+
+<p>Both semantic and signal are completely arbitrary and you can use whatever you feel makes sense. Historically, Trailblazer uses the <code>Right</code> signal for outputs with the <code>:success</code> semantic, and <code>Left</code> for <code>:failure</code>. Also note that even the semantic (e.g. <code>:success</code>) doesn&#39;t have any meaning except for the modelling.</p>
+
+<p><aside class="notice">Note that the terms <em>output</em> and <em>semantic</em> are inventions of Trailblazer and not part of BPMN.</aside></p>
 <h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
 <h3 id='activity-call'>Call</h3><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
