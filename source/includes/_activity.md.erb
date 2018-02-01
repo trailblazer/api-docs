@@ -40,7 +40,7 @@ Each box in this diagram is called a task or step. Each is represented by a call
 
 ## Anatomy
 
-An activity is a set of tasks, with at least one start event and one or multiple end events. A task can be any Ruby callable that follows the _task interface_, and even another activity itself.
+An activity is a set of tasks, with at least one start event and one or multiple end events. A task can be any Ruby callable that follows the [_task interface_](#activity-task-interface), and it can even be another activity itself.
 
 <img src="/images/activity-anatomy-1.png" >
 
@@ -52,7 +52,7 @@ Here's a another representation of a different activity, one that uses the above
 
 <img src="/images/activity-anatomy-2.png" >
 
-Nested activities (in BPMN they're called _subprocess_), are marked by the `[+]` symbol in the box. As you can see, both outgoing connections from the nested `<update>` activity need to be wired to _something_ in the outer workflow. In this example, the "failure" output of the nested `<update>` activity is wired to the `End.failure` end event.
+Nested activities (in BPMN they're called _subprocess_), are marked by the `[+]` symbol in the box. As you can see, both outgoing connections from the nested `<update>` activity need to be wired to _something_ in the outer workflow. In this example, the "failure" output of the nested `<update>` activity is wired directly to the `End.failure` end event.
 
 Let's look at this diagram again, with correct annotations, outputs and semantics. All those new terms will become a bit clearer in a bit.
 
@@ -77,14 +77,14 @@ end
 
 A task can have different outputs. Every output is defined by a _semantic_ (for example `:success`) and a _signal_.
 
-Both semantic and signal are completely arbitrary and you can use whatever you feel makes sense. Historically, Trailblazer uses the `Right` signal for outputs with the `:success` semantic, and `Left` for `:failure`. Also note that even the semantic (e.g. `:success`) doesn't have any meaning except for the modelling. And you can have as many outputs as you need from a task.
+Both semantic and signal are completely arbitrary and you can use whatever you feel makes sense. Historically, Trailblazer uses the `Right` signal for outputs with the `:success` semantic, and `Left` for `:failure`. Also note that even the semantic (e.g. `:success`) doesn't have any meaning except for the modelling. Oh, and you're not limited to two outputs: a task may have as many outputs as you need.
 
 Now, why not relate this to some code? Remember, a plain task is always a piece of Ruby code. The task can pick what output to take by returning the output's respective signal.
 
 
 ***Note that the terms _output_ and _semantic_ are inventions of Trailblazer and not part of BPMN.***
 
-With nested activities, it's slightly different. Since the last task will be an end event, it's this very end event to decide what signal to emit. End events always [return themselves as the signal](#activity-event).
+With nested activities, it's slightly different. Since the last task will be an end event, it's this very end event to decide what signal to emit. End events always [return themselves as the signal](#activity-event). This allows to wire a nested activity's ends to specific paths in the outer diagram, the way we've modelled it in the example above and in the next paragraph.
 
 ### Outputs and Semantics
 
@@ -102,7 +102,7 @@ end
 > Both tasks could be wired without knowing what signal they emit, just by referencing standard semantics of their outputs.
 
 
-Having defined tasks with outputs, where an output emits a specific signal, an activity modeller's job is now to specify what output gets connected to what further connection.
+Having defined tasks with outputs, where an output emits a specific signal, an activity modeller's job now is to specify what output gets connected to what further connection.
 
 This is where the semantic of an output comes into play. A modeller can connect, say, the `:failure` output of a task with an error handler, and then with an erroring end event, without knowing about the underlying signals. This allows Trailblazer to expose a generic modelling API.
 
@@ -113,8 +113,40 @@ All mentioned modelling concepts will be explained in detail in the following se
 
 ## Output
 
-The entire DSL is only about outputs, or about connecting outputs to tasks, to be more accurate.
+> A task can return any signal with the task interface.
 
+```ruby
+def policy( (ctx, flow_options), **)
+  signal = ctx[:current_user].nil? ?
+    Trailblazer::Activity::Left :
+    Trailblazer::Activity::Right
+
+  return signal, [ctx, flow_options]
+end
+```
+
+The entire DSL is only about outputs, or about connecting outputs to tasks, to be more accurate. That's why we spend a lot of time working out the best way to model activities.
+
+On the right-hand side, you see a `policy` task that returns either a `Right` or a `Left` signal. Remember, tasks can return just anything as a signal. Since for callable Ruby objects (which is what tasks are), there's no way to define what outputs a task comes with, it's the DSL's job to define a set of outputs of a specific task.
+
+The example only works because the DSL automatically assigns outputs if none are given.
+
+When using `task` or other DSL methods to add a task, depending on the strategy, the DSL will automatically provide default outputs as you see on the right. Since the outputs are provided, the DSL strategy will now automatically connect the outputs to the next task.
+
+For example, with `Path()`, a `:success` step will be wired to the next `task` call. In a `Railway`, the same happens, plus a `:failure` output will be connected to the error track for you.
+
+```ruby
+module Memo::Create
+  extend Trailblazer::Activity::Railway() # we're using the Railsway here
+
+  step method(:policy)
+  #=> defaults:
+  # outputs: {
+  #   success: #<Activity::Output semantic="success" signal=Activity::Right>,
+  #   failure: #<Activity::Output semantic="failure" signal=Activity::Left>
+  # }
+end
+```
 
 ### Definition
 
@@ -122,6 +154,8 @@ SomeModule.method(:find)
 
 
 ### Call
+
+## Task Interface
 
 ## DSL
 
