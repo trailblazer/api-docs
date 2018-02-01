@@ -230,6 +230,12 @@
                     <a href="#activity-anatomy" class="toc-h2 toc-link" data-title="anatomy">Anatomy</a>
                   </li>
                   <li>
+                    <a href="#activity-output" class="toc-h2 toc-link" data-title="output">Output</a>
+                  </li>
+                  <li>
+                    <a href="#activity-task-interface" class="toc-h2 toc-link" data-title="task-interface">Task Interface</a>
+                  </li>
+                  <li>
                     <a href="#activity-dsl" class="toc-h2 toc-link" data-title="dsl">DSL</a>
                   </li>
                   <li>
@@ -274,6 +280,14 @@
           </li>
           <li>
             <a href="#trailblazer" class="toc-h1 toc-link" data-title="trailblazer">Trailblazer</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#trailblazer-file-structure" class="toc-h2 toc-link" data-title="file-structure">File Structure</a>
+                  </li>
+                  <li>
+                    <a href="#trailblazer-loader" class="toc-h2 toc-link" data-title="loader">Loader</a>
+                  </li>
+              </ul>
           </li>
           <li>
             <a href="#test" class="toc-h1 toc-link" data-title="test">Test</a>
@@ -405,7 +419,7 @@
 
 <p>Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the <em>step interface</em> returns <code>trusy</code> of <code>falsey</code> and thus instructs the activity what way to choose from here.</p>
 <h2 id='activity-anatomy'>Anatomy</h2>
-<p>An activity is a set of tasks, with at least one start event and one or multiple end events. A task can be any Ruby callable that follows the <em>task interface</em>, and even another activity itself.</p>
+<p>An activity is a set of tasks, with at least one start event and one or multiple end events. A task can be any Ruby callable that follows the <a href="#activity-task-interface"><em>task interface</em></a>, and it can even be another activity itself.</p>
 
 <p><img src="images/activity-anatomy-1.png" ></p>
 
@@ -417,7 +431,7 @@
 
 <p><img src="images/activity-anatomy-2.png" ></p>
 
-<p>Nested activities (in BPMN they&#39;re called <em>subprocess</em>), are marked by the <code>[+]</code> symbol in the box. As you can see, both outgoing connections from the nested <code>&lt;update&gt;</code> activity need to be wired to <em>something</em> in the outer workflow. In this example, the &quot;failure&quot; output of the nested <code>&lt;update&gt;</code> activity is wired to the <code>End.failure</code> end event.</p>
+<p>Nested activities (in BPMN they&#39;re called <em>subprocess</em>), are marked by the <code>[+]</code> symbol in the box. As you can see, both outgoing connections from the nested <code>&lt;update&gt;</code> activity need to be wired to <em>something</em> in the outer workflow. In this example, the &quot;failure&quot; output of the nested <code>&lt;update&gt;</code> activity is wired directly to the <code>End.failure</code> end event.</p>
 
 <p>Let&#39;s look at this diagram again, with correct annotations, outputs and semantics. All those new terms will become a bit clearer in a bit.</p>
 
@@ -440,13 +454,13 @@
 </code></pre>
 <p>A task can have different outputs. Every output is defined by a <em>semantic</em> (for example <code>:success</code>) and a <em>signal</em>.</p>
 
-<p>Both semantic and signal are completely arbitrary and you can use whatever you feel makes sense. Historically, Trailblazer uses the <code>Right</code> signal for outputs with the <code>:success</code> semantic, and <code>Left</code> for <code>:failure</code>. Also note that even the semantic (e.g. <code>:success</code>) doesn&#39;t have any meaning except for the modelling. And you can have as many outputs as you need from a task.</p>
+<p>Both semantic and signal are completely arbitrary and you can use whatever you feel makes sense. Historically, Trailblazer uses the <code>Right</code> signal for outputs with the <code>:success</code> semantic, and <code>Left</code> for <code>:failure</code>. Also note that even the semantic (e.g. <code>:success</code>) doesn&#39;t have any meaning except for the modelling. Oh, and you&#39;re not limited to two outputs: a task may have as many outputs as you need.</p>
 
 <p>Now, why not relate this to some code? Remember, a plain task is always a piece of Ruby code. The task can pick what output to take by returning the output&#39;s respective signal.</p>
 
 <p><aside class="notice">Note that the terms <em>output</em> and <em>semantic</em> are inventions of Trailblazer and not part of BPMN.</aside></p>
 
-<p>With nested activities, it&#39;s slightly different. Since the last task will be an end event, it&#39;s this very end event to decide what signal to emit. End events always <a href="#activity-event">return themselves as the signal</a>.</p>
+<p>With nested activities, it&#39;s slightly different. Since the last task will be an end event, it&#39;s this very end event to decide what signal to emit. End events always <a href="#activity-event">return themselves as the signal</a>. This allows to wire a nested activity&#39;s ends to specific paths in the outer diagram, the way we&#39;ve modelled it in the example above and in the next paragraph.</p>
 <h3 id='activity-outputs-and-semantics'>Outputs and Semantics</h3><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Path</span><span class="p">()</span>
 
@@ -460,16 +474,49 @@
 <p>Both tasks could be wired without knowing what signal they emit, just by referencing standard semantics of their outputs.</p>
 </blockquote>
 
-<p>Having defined tasks with outputs, where an output emits a specific signal, an activity modeller&#39;s job is now to specify what output gets connected to what further connection.</p>
+<p>Having defined tasks with outputs, where an output emits a specific signal, an activity modeller&#39;s job now is to specify what output gets connected to what further connection.</p>
 
 <p>This is where the semantic of an output comes into play. A modeller can connect, say, the <code>:failure</code> output of a task with an error handler, and then with an erroring end event, without knowing about the underlying signals. This allows Trailblazer to expose a generic modelling API.</p>
 
 <p><img src="images/activity-anatomy-5.png" ></p>
 
 <p>All mentioned modelling concepts will be explained in detail in the following sections.</p>
+<h2 id='activity-output'>Output</h2>
+<blockquote>
+<p>A task can return any signal with the task interface.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">def</span> <span class="nf">policy</span><span class="p">(</span> <span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">),</span> <span class="o">**</span><span class="p">)</span>
+  <span class="n">signal</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="ss">:current_user</span><span class="p">].</span><span class="nf">nil?</span> <span class="p">?</span>
+    <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Left</span> <span class="p">:</span>
+    <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Right</span>
+
+  <span class="k">return</span> <span class="n">signal</span><span class="p">,</span> <span class="p">[</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">]</span>
+<span class="k">end</span>
+</code></pre>
+<p>The entire DSL is only about outputs, or about connecting outputs to tasks, to be more accurate. That&#39;s why we spend a lot of time working out the best way to model activities.</p>
+
+<p>On the right-hand side, you see a <code>policy</code> task that returns either a <code>Right</code> or a <code>Left</code> signal. Remember, tasks can return just anything as a signal. Since for callable Ruby objects (which is what tasks are), there&#39;s no way to define what outputs a task comes with, it&#39;s the DSL&#39;s job to define a set of outputs of a specific task.</p>
+
+<p>The example only works because the DSL automatically assigns outputs if none are given.</p>
+
+<p>When using <code>task</code> or other DSL methods to add a task, depending on the strategy, the DSL will automatically provide default outputs as you see on the right. Since the outputs are provided, the DSL strategy will now automatically connect the outputs to the next task.</p>
+
+<p>For example, with <code>Path()</code>, a <code>:success</code> step will be wired to the next <code>task</code> call. In a <code>Railway</code>, the same happens, plus a <code>:failure</code> output will be connected to the error track for you.</p>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span> <span class="c1"># we're using the Railsway here</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
+  <span class="c1">#=&gt; defaults:</span>
+  <span class="c1"># outputs: {</span>
+  <span class="c1">#   success: #&lt;Activity::Output semantic="success" signal=Activity::Right&gt;,</span>
+  <span class="c1">#   failure: #&lt;Activity::Output semantic="failure" signal=Activity::Left&gt;</span>
+  <span class="c1"># }</span>
+<span class="k">end</span>
+</code></pre>
+<p>with <code>Nested</code></p>
 <h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
-<h3 id='activity-call'>Call</h3><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
+<h3 id='activity-call'>Call</h3><h2 id='activity-task-interface'>Task Interface</h2><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
 <blockquote>
 <p>Always build end instances via the <code>End</code> builder.</p>
 </blockquote>
@@ -697,6 +744,23 @@ Orchestration</p>
 <aside class="notice">
   Populate me
 </aside>
+<h2 id='trailblazer-file-structure'>File Structure</h2><h2 id='trailblazer-loader'>Loader</h2>
+<blockquote>
+<p>Short-form, needs our loader.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+<span class="k">end</span>
+</code></pre>
+<blockquote>
+<p>Normal, works with Rails autoloader out-of-the-box.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Operation</span>
+  <span class="k">class</span> <span class="nc">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre><h3 id='trailblazer-disable-loader'>Disable Loader</h3><pre class="highlight ruby tab-ruby"><code><span class="no">Memos</span><span class="o">::</span><span class="no">Application</span><span class="p">.</span><span class="nf">config</span><span class="p">.</span><span class="nf">trailblazer</span><span class="p">.</span><span class="nf">use_loader</span> <span class="o">=</span> <span class="kp">false</span>
+</code></pre>
+<p>In Rails, the <code>Trailblazer::Loader</code> is only necessary when you want to use the short-form for operations. You can disable our loader entirely should you follow the <a href="http://guides.rubyonrails.org/autoloading_and_reloading_constants.html">Rails naming conventions</a>.</p>
 <h1 id='test'>Test</h1><h2 id='test-operation-tests'>Operation tests</h2><h2 id='test-factory'>Factory</h2><h2 id='test-dependency-injection'>Dependency Injection</h2><h1 id='workflow'>Workflow</h1>
 <aside class="notice">
 Please note that the `workflow` gem and its process engine can only be used by subscribing to a PRO or ENTERPRISE plan.
