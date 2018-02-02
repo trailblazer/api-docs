@@ -114,7 +114,7 @@ All mentioned modelling concepts will be explained in detail in the following se
 ## Output
 
 > A task can return any signal with the task interface.
-
+ The signal dictates which physical output to take.
 ```ruby
 def policy( (ctx, flow_options), **)
   signal = ctx[:current_user].nil? ?
@@ -125,15 +125,7 @@ def policy( (ctx, flow_options), **)
 end
 ```
 
-The entire DSL is only about outputs, or about connecting outputs to tasks, to be more accurate. That's why we spend a lot of time working out the best way to model activities.
-
-On the right-hand side, you see a `policy` task that returns either a `Right` or a `Left` signal. Remember, tasks can return just anything as a signal. Since for callable Ruby objects (which is what tasks are), there's no way to define what outputs a task comes with, it's the DSL's job to define a set of outputs of a specific task.
-
-The example only works because the DSL automatically assigns outputs if none are given.
-
-When using `task` or other DSL methods to add a task, depending on the strategy, the DSL will automatically provide default outputs as you see on the right. Since the outputs are provided, the DSL strategy will now automatically connect the outputs to the next task.
-
-For example, with `Path()`, a `:success` step will be wired to the next `task` call. In a `Railway`, the same happens, plus a `:failure` output will be connected to the error track for you.
+> The DSL automatically assigns default outputs if none are specified.
 
 ```ruby
 module Memo::Create
@@ -147,6 +139,69 @@ module Memo::Create
   # }
 end
 ```
+
+The entire DSL is only about outputs, or about connecting outputs to tasks, to be more accurate. That's why we spend a lot of time working out the best way to model activities.
+
+<!-- @nutshell -->
+***An output is mostly represented by a circle sitting on the box's edge. It is defined as a tuple of signal along with a semantic. We often write outputs in diagrams like `<Signal>:semantic`. The task's Ruby code can pick what output to take by returning the specific signal.***
+
+Sometimes, we omit the circle and just annotate the outgoing arrow with the signal tuple.
+
+<img src="/images/output-versions.png" >
+
+On the right-hand side, you see a `policy` task that returns either a `Right` or a `Left` signal. Remember, tasks can return just anything as a signal. Since for callable Ruby objects (which is what tasks are), there's no way to define what outputs a task comes with, it's the DSL's job to define a set of outputs of a specific task.
+
+The example only works because the DSL automatically assigns outputs if none are given.
+
+When using `task` or other DSL methods to add a task, depending on the strategy, the DSL will automatically provide default outputs as you see on the right. Since, now, the outputs are provided, the DSL strategy will now automatically connect the outputs to the next task.
+
+For example, with `Path()`, a `:success` step will be wired to the next `task` call. In a `Railway`, the same happens, plus a `:failure` output will be connected to the error track for you.
+
+<!-- @notoc -->
+## Output: Plain Task
+
+> With `Path()`, the `task` method defaults `:outputs` to one `:success` output (left diagram).
+
+```ruby
+module Memo::Create
+  extend Trailblazer::Activity::Path()
+
+  task method(:policy) #, outputs: { success: <signal=Right, semantic=:success> }
+end
+```
+
+> With `Railway()`, the default outputs will be `Right` and `Left` (middle diagram).
+
+```ruby
+module Memo::Create
+  extend Trailblazer::Activity::Railway() # we're using the Railsway here
+
+  step method(:policy)
+```
+
+> With `FastTrack()` and the `fast_track: true` options, default outputs will be `Right`, `Left`, `PassFast` and `FailFast` (right diagram). This gives you four possible default outputs.
+
+```ruby
+module Memo::Create
+  extend Trailblazer::Activity::FastTrack() # we're using the Railsway here
+
+  step method(:policy), fast_track: true
+```
+
+When inserting a task via the DSL, everything works identical to the behavior when [adding `Nested` activities](#activity-output-nested) except for one thing: Since the DSL can't query a callable Ruby object for its outputs, it defaults the outputs as follows.
+
+In a `Path()`-based activity, the `task` method always adds a `:success` output with a `Right` signal (left diagram).
+
+<img src="/images/output-task.png" >
+
+In a `Railway()` or `FastTrack()` activity, the `step` method adds `:success` and `:failure`. The latter emitting a `Left` signal (middle diagram). With `FastTrack` and the `:fast_track` option, you get up to four outputs predefined (right diagram).
+
+Note that adding `:outputs` to a task doesn't mean they will be connected, it's the DSL's job now to wire those to the next task, unless you [specify the connection explicitly](#activity-output-id).
+
+<!-- @notoc -->
+### Output: Nested
+
+## Output: Id
 
 ### Definition
 
