@@ -6,6 +6,11 @@ def toc_data(page_content)
   # get a flat list of headers
   headers = []
   html_doc.css('h1, h2, h3').each do |header|
+    if sibling = header.previous_sibling
+      node = sibling.previous_sibling
+      next if node && node.text =~ /\@notoc/
+    end
+
     headers.push({
       id: header.attribute('id').to_s,
       content: header.children,

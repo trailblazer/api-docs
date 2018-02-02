@@ -212,7 +212,7 @@ Suppose the following `Update::Model` activity needs to be nested into another a
 
 ```ruby
 module Memo::Update
-  extend Trailblazer::Activity::Railway() # we're using the Railsway here
+  extend Trailblazer::Activity::Railway()
 
   step method(:policy)
   step Nested( Update::Model )
@@ -229,7 +229,7 @@ end
 
 ```ruby
 module Memo::Update
-  extend Trailblazer::Activity::Railway() # we're using the Railsway here
+  extend Trailblazer::Activity::Railway()
 
   step method(:policy)
   step Nested( Update::Model ), Output(:failure_validation) => :failure
@@ -247,10 +247,14 @@ You need to specify that connection manually using `Output(:failure_validation)`
 
 You now have two outputs going to the same next step, which is actually fine in both BPMN and Trailblazer. It's possible to [rewire by color](#activity-output-color), to a [specific next task]((#activity-output-id)), or to an [existing or new end](#activity-output-end).
 
+<!-- @notoc -->
 ## Output: Output option
 
+<!-- @notoc -->
 ## Output: Id
+<!-- @notoc -->
 ## Output: Color
+<!-- @notoc -->
 ## Output: End
 
 
