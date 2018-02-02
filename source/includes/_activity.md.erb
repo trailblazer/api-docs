@@ -113,8 +113,17 @@ All mentioned modelling concepts will be explained in detail in the following se
 
 ## Output
 
+
+The entire DSL is only about outputs, or about connecting outputs to tasks, to be more accurate. That's why we spend a lot of time working out the best way to model activities.
+
+<!-- @nutshell -->
+***An output is mostly represented by a circle sitting on the box's edge. It is defined as a tuple of signal along with a semantic. We often write outputs in diagrams like `<Signal>:semantic`. The task's Ruby code can pick what output to take by returning the specific signal.***
+
+Sometimes, we omit the circle and just annotate the outgoing arrow with the signal tuple.
+
 > A task can return any signal with the task interface.
  The signal dictates which physical output to take.
+
 ```ruby
 def policy( (ctx, flow_options), **)
   signal = ctx[:current_user].nil? ?
@@ -134,18 +143,11 @@ module Memo::Create
   step method(:policy)
   #=> defaults:
   # outputs: {
-  #   success: #<Activity::Output semantic="success" signal=Activity::Right>,
-  #   failure: #<Activity::Output semantic="failure" signal=Activity::Left>
+  #   success: Output{<Right>:success},
+  #   failure: Output{<Left>:failure}
   # }
 end
 ```
-
-The entire DSL is only about outputs, or about connecting outputs to tasks, to be more accurate. That's why we spend a lot of time working out the best way to model activities.
-
-<!-- @nutshell -->
-***An output is mostly represented by a circle sitting on the box's edge. It is defined as a tuple of signal along with a semantic. We often write outputs in diagrams like `<Signal>:semantic`. The task's Ruby code can pick what output to take by returning the specific signal.***
-
-Sometimes, we omit the circle and just annotate the outgoing arrow with the signal tuple.
 
 <img src="/images/output-versions.png" >
 
@@ -158,7 +160,7 @@ When using `task` or other DSL methods to add a task, depending on the strategy,
 For example, with `Path()`, a `:success` step will be wired to the next `task` call. In a `Railway`, the same happens, plus a `:failure` output will be connected to the error track for you.
 
 <!-- @notoc -->
-## Output: Plain Task
+## Output: Defaults for Plain Task
 
 > With `Path()`, the `task` method defaults `:outputs` to one `:success` output (left diagram).
 
@@ -166,7 +168,7 @@ For example, with `Path()`, a `:success` step will be wired to the next `task` c
 module Memo::Create
   extend Trailblazer::Activity::Path()
 
-  task method(:policy) #, outputs: { success: <signal=Right, semantic=:success> }
+  task method(:policy) #, outputs: { success: Output{<Right>:success} }
 end
 ```
 
@@ -199,9 +201,58 @@ In a `Railway()` or `FastTrack()` activity, the `step` method adds `:success` an
 Note that adding `:outputs` to a task doesn't mean they will be connected, it's the DSL's job now to wire those to the next task, unless you [specify the connection explicitly](#activity-output-id).
 
 <!-- @notoc -->
-### Output: Nested
+## Output: Nested
+
+
+Activities can be nested. This is usually done with the `Nested` macro that will automatically define `:outputs` for the nested activity by querying the latter via its `output` method. `Nested` assumes that the nested activity follows the [activity-interface](#activity-activity-interface).
+
+Suppose the following `Update::Model` activity needs to be nested into another activity `Update`.
+
+<img src="/images/activity-overview.png" >
+
+```ruby
+module Memo::Update
+  extend Trailblazer::Activity::Railway() # we're using the Railsway here
+
+  step method(:policy)
+  step Nested( Update::Model )
+    #=> defaults:
+    # outputs: {
+    #   success:            Output{<Update::Right>:success},
+    #   failure:            Output{<Update::Left>:failure},
+    #   failure_validation: Output{<Update::ValidationErr>:failure_validation},
+    # }
+end
+```
+
+> Non-standard semantics can be re-routed manually.
+
+```ruby
+module Memo::Update
+  extend Trailblazer::Activity::Railway() # we're using the Railsway here
+
+  step method(:policy)
+  step Nested( Update::Model ), Output(:failure_validation) => :failure
+end
+```
+
+
+The `Railway()` strategy will now automatically connect outputs with semantics it knows. Note that the `failure.validation` output can't be auto-connected since the semantic is unknown.
+
+<img src="/images/nested-open.png" >
+
+You need to specify that connection manually using `Output(:failure_validation)`. In the example to the right, we let the DSL take care of wiring this output to a specific task, and just say "connect `Update`'s validation failure output to the failure track".
+
+<img src="/images/nested-connected-color.png" >
+
+You now have two outputs going to the same next step, which is actually fine in both BPMN and Trailblazer. It's possible to [rewire by color](#activity-output-color), to a [specific next task]((#activity-output-id)), or to an [existing or new end](#activity-output-end).
+
+## Output: Output option
 
 ## Output: Id
+## Output: Color
+## Output: End
+
 
 ### Definition
 
@@ -255,3 +306,5 @@ An extra path can be joined with the outer activity by pointing the last (or any
 <img src="/images/path-join.png" >
 
 Only when `find` returns the `Left` signal, the extra path is taken.
+
+## Activity Interface
