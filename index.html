@@ -233,24 +233,6 @@
                     <a href="#activity-output" class="toc-h2 toc-link" data-title="output">Output</a>
                   </li>
                   <li>
-                    <a href="#activity-output-defaults-for-plain-task" class="toc-h2 toc-link" data-title="output-defaults-for-plain-task">Output: Defaults for Plain Task</a>
-                  </li>
-                  <li>
-                    <a href="#activity-output-nested" class="toc-h2 toc-link" data-title="output-nested">Output: Nested</a>
-                  </li>
-                  <li>
-                    <a href="#activity-output-output-option" class="toc-h2 toc-link" data-title="output-output-option">Output: Output option</a>
-                  </li>
-                  <li>
-                    <a href="#activity-output-id" class="toc-h2 toc-link" data-title="output-id">Output: Id</a>
-                  </li>
-                  <li>
-                    <a href="#activity-output-color" class="toc-h2 toc-link" data-title="output-color">Output: Color</a>
-                  </li>
-                  <li>
-                    <a href="#activity-output-end" class="toc-h2 toc-link" data-title="output-end">Output: End</a>
-                  </li>
-                  <li>
                     <a href="#activity-task-interface" class="toc-h2 toc-link" data-title="task-interface">Task Interface</a>
                   </li>
                   <li>
@@ -592,7 +574,7 @@
 
 <p><img src="images/activity-overview.png" ></p>
 <pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
-  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span> <span class="c1"># we're using the Railsway here</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
 
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
   <span class="n">step</span> <span class="no">Nested</span><span class="p">(</span> <span class="no">Update</span><span class="o">::</span><span class="no">Model</span> <span class="p">)</span>
@@ -608,7 +590,7 @@
 <p>Non-standard semantics can be re-routed manually.</p>
 </blockquote>
 <pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
-  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span> <span class="c1"># we're using the Railsway here</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
 
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
   <span class="n">step</span> <span class="no">Nested</span><span class="p">(</span> <span class="no">Update</span><span class="o">::</span><span class="no">Model</span> <span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure_validation</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:failure</span>
@@ -623,7 +605,15 @@
 <p><img src="images/nested-connected-color.png" ></p>
 
 <p>You now have two outputs going to the same next step, which is actually fine in both BPMN and Trailblazer. It&#39;s possible to <a href="#activity-output-color">rewire by color</a>, to a <a href="(#activity-output-id)">specific next task</a>, or to an <a href="#activity-output-end">existing or new end</a>.</p>
-<h2 id='activity-output-output-option'>Output: Output option</h2><h2 id='activity-output-id'>Output: Id</h2><h2 id='activity-output-color'>Output: Color</h2><h2 id='activity-output-end'>Output: End</h2><h3 id='activity-definition'>Definition</h3>
+
+<!-- @notoc -->
+<h2 id='activity-output-output-option'>Output: Output option</h2>
+<!-- @notoc -->
+<h2 id='activity-output-id'>Output: Id</h2>
+<!-- @notoc -->
+<h2 id='activity-output-color'>Output: Color</h2>
+<!-- @notoc -->
+<h2 id='activity-output-end'>Output: End</h2><h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
 <h3 id='activity-call'>Call</h3><h2 id='activity-task-interface'>Task Interface</h2><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
 <blockquote>
