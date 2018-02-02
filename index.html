@@ -233,6 +233,24 @@
                     <a href="#activity-output" class="toc-h2 toc-link" data-title="output">Output</a>
                   </li>
                   <li>
+                    <a href="#activity-output-defaults-for-plain-task" class="toc-h2 toc-link" data-title="output-defaults-for-plain-task">Output: Defaults for Plain Task</a>
+                  </li>
+                  <li>
+                    <a href="#activity-output-nested" class="toc-h2 toc-link" data-title="output-nested">Output: Nested</a>
+                  </li>
+                  <li>
+                    <a href="#activity-output-output-option" class="toc-h2 toc-link" data-title="output-output-option">Output: Output option</a>
+                  </li>
+                  <li>
+                    <a href="#activity-output-id" class="toc-h2 toc-link" data-title="output-id">Output: Id</a>
+                  </li>
+                  <li>
+                    <a href="#activity-output-color" class="toc-h2 toc-link" data-title="output-color">Output: Color</a>
+                  </li>
+                  <li>
+                    <a href="#activity-output-end" class="toc-h2 toc-link" data-title="output-end">Output: End</a>
+                  </li>
+                  <li>
                     <a href="#activity-task-interface" class="toc-h2 toc-link" data-title="task-interface">Task Interface</a>
                   </li>
                   <li>
@@ -243,6 +261,9 @@
                   </li>
                   <li>
                     <a href="#activity-path" class="toc-h2 toc-link" data-title="path">Path</a>
+                  </li>
+                  <li>
+                    <a href="#activity-activity-interface" class="toc-h2 toc-link" data-title="activity-interface">Activity Interface</a>
                   </li>
               </ul>
           </li>
@@ -482,8 +503,17 @@
 
 <p>All mentioned modelling concepts will be explained in detail in the following sections.</p>
 <h2 id='activity-output'>Output</h2>
+<p>The entire DSL is only about outputs, or about connecting outputs to tasks, to be more accurate. That&#39;s why we spend a lot of time working out the best way to model activities.</p>
+
+<!-- @nutshell -->
+
+<p><aside class="notice">An output is mostly represented by a circle sitting on the box&#39;s edge. It is defined as a tuple of signal along with a semantic. We often write outputs in diagrams like <code>&lt;Signal&gt;:semantic</code>. The task&#39;s Ruby code can pick what output to take by returning the specific signal.</aside></p>
+
+<p>Sometimes, we omit the circle and just annotate the outgoing arrow with the signal tuple.</p>
+
 <blockquote>
-<p>A task can return any signal with the task interface.</p>
+<p>A task can return any signal with the task interface.
+ The signal dictates which physical output to take.</p>
 </blockquote>
 <pre class="highlight ruby tab-ruby"><code><span class="k">def</span> <span class="nf">policy</span><span class="p">(</span> <span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">),</span> <span class="o">**</span><span class="p">)</span>
   <span class="n">signal</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="ss">:current_user</span><span class="p">].</span><span class="nf">nil?</span> <span class="p">?</span>
@@ -493,28 +523,107 @@
   <span class="k">return</span> <span class="n">signal</span><span class="p">,</span> <span class="p">[</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">]</span>
 <span class="k">end</span>
 </code></pre>
-<p>The entire DSL is only about outputs, or about connecting outputs to tasks, to be more accurate. That&#39;s why we spend a lot of time working out the best way to model activities.</p>
-
-<p>On the right-hand side, you see a <code>policy</code> task that returns either a <code>Right</code> or a <code>Left</code> signal. Remember, tasks can return just anything as a signal. Since for callable Ruby objects (which is what tasks are), there&#39;s no way to define what outputs a task comes with, it&#39;s the DSL&#39;s job to define a set of outputs of a specific task.</p>
-
-<p>The example only works because the DSL automatically assigns outputs if none are given.</p>
-
-<p>When using <code>task</code> or other DSL methods to add a task, depending on the strategy, the DSL will automatically provide default outputs as you see on the right. Since the outputs are provided, the DSL strategy will now automatically connect the outputs to the next task.</p>
-
-<p>For example, with <code>Path()</code>, a <code>:success</code> step will be wired to the next <code>task</code> call. In a <code>Railway</code>, the same happens, plus a <code>:failure</code> output will be connected to the error track for you.</p>
+<blockquote>
+<p>The DSL automatically assigns default outputs if none are specified.</p>
+</blockquote>
 <pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span> <span class="c1"># we're using the Railsway here</span>
 
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
   <span class="c1">#=&gt; defaults:</span>
   <span class="c1"># outputs: {</span>
-  <span class="c1">#   success: #&lt;Activity::Output semantic="success" signal=Activity::Right&gt;,</span>
-  <span class="c1">#   failure: #&lt;Activity::Output semantic="failure" signal=Activity::Left&gt;</span>
+  <span class="c1">#   success: Output{&lt;Right&gt;:success},</span>
+  <span class="c1">#   failure: Output{&lt;Left&gt;:failure}</span>
   <span class="c1"># }</span>
 <span class="k">end</span>
 </code></pre>
-<p>with <code>Nested</code></p>
-<h3 id='activity-definition'>Definition</h3>
+<p><img src="images/output-versions.png" ></p>
+
+<p>On the right-hand side, you see a <code>policy</code> task that returns either a <code>Right</code> or a <code>Left</code> signal. Remember, tasks can return just anything as a signal. Since for callable Ruby objects (which is what tasks are), there&#39;s no way to define what outputs a task comes with, it&#39;s the DSL&#39;s job to define a set of outputs of a specific task.</p>
+
+<p>The example only works because the DSL automatically assigns outputs if none are given.</p>
+
+<p>When using <code>task</code> or other DSL methods to add a task, depending on the strategy, the DSL will automatically provide default outputs as you see on the right. Since, now, the outputs are provided, the DSL strategy will now automatically connect the outputs to the next task.</p>
+
+<p>For example, with <code>Path()</code>, a <code>:success</code> step will be wired to the next <code>task</code> call. In a <code>Railway</code>, the same happens, plus a <code>:failure</code> output will be connected to the error track for you.</p>
+
+<!-- @notoc -->
+<h2 id='activity-output-defaults-for-plain-task'>Output: Defaults for Plain Task</h2>
+<blockquote>
+<p>With <code>Path()</code>, the <code>task</code> method defaults <code>:outputs</code> to one <code>:success</code> output (left diagram).</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Path</span><span class="p">()</span>
+
+  <span class="n">task</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span> <span class="c1">#, outputs: { success: Output{&lt;Right&gt;:success} }</span>
+<span class="k">end</span>
+</code></pre>
+<blockquote>
+<p>With <code>Railway()</code>, the default outputs will be <code>Right</code> and <code>Left</code> (middle diagram).</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span> <span class="c1"># we're using the Railsway here</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
+</code></pre>
+<blockquote>
+<p>With <code>FastTrack()</code> and the <code>fast_track: true</code> options, default outputs will be <code>Right</code>, <code>Left</code>, <code>PassFast</code> and <code>FailFast</code> (right diagram). This gives you four possible default outputs.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">FastTrack</span><span class="p">()</span> <span class="c1"># we're using the Railsway here</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">),</span> <span class="ss">fast_track: </span><span class="kp">true</span>
+</code></pre>
+<p>When inserting a task via the DSL, everything works identical to the behavior when <a href="#activity-output-nested">adding <code>Nested</code> activities</a> except for one thing: Since the DSL can&#39;t query a callable Ruby object for its outputs, it defaults the outputs as follows.</p>
+
+<p>In a <code>Path()</code>-based activity, the <code>task</code> method always adds a <code>:success</code> output with a <code>Right</code> signal (left diagram).</p>
+
+<p><img src="images/output-task.png" ></p>
+
+<p>In a <code>Railway()</code> or <code>FastTrack()</code> activity, the <code>step</code> method adds <code>:success</code> and <code>:failure</code>. The latter emitting a <code>Left</code> signal (middle diagram). With <code>FastTrack</code> and the <code>:fast_track</code> option, you get up to four outputs predefined (right diagram).</p>
+
+<p>Note that adding <code>:outputs</code> to a task doesn&#39;t mean they will be connected, it&#39;s the DSL&#39;s job now to wire those to the next task, unless you <a href="#activity-output-id">specify the connection explicitly</a>.</p>
+
+<!-- @notoc -->
+<h2 id='activity-output-nested'>Output: Nested</h2>
+<p>Activities can be nested. This is usually done with the <code>Nested</code> macro that will automatically define <code>:outputs</code> for the nested activity by querying the latter via its <code>output</code> method. <code>Nested</code> assumes that the nested activity follows the <a href="#activity-activity-interface">activity-interface</a>.</p>
+
+<p>Suppose the following <code>Update::Model</code> activity needs to be nested into another activity <code>Update</code>.</p>
+
+<p><img src="images/activity-overview.png" ></p>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span> <span class="c1"># we're using the Railsway here</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
+  <span class="n">step</span> <span class="no">Nested</span><span class="p">(</span> <span class="no">Update</span><span class="o">::</span><span class="no">Model</span> <span class="p">)</span>
+    <span class="c1">#=&gt; defaults:</span>
+    <span class="c1"># outputs: {</span>
+    <span class="c1">#   success:            Output{&lt;Update::Right&gt;:success},</span>
+    <span class="c1">#   failure:            Output{&lt;Update::Left&gt;:failure},</span>
+    <span class="c1">#   failure_validation: Output{&lt;Update::ValidationErr&gt;:failure_validation},</span>
+    <span class="c1"># }</span>
+<span class="k">end</span>
+</code></pre>
+<blockquote>
+<p>Non-standard semantics can be re-routed manually.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span> <span class="c1"># we're using the Railsway here</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
+  <span class="n">step</span> <span class="no">Nested</span><span class="p">(</span> <span class="no">Update</span><span class="o">::</span><span class="no">Model</span> <span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure_validation</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:failure</span>
+<span class="k">end</span>
+</code></pre>
+<p>The <code>Railway()</code> strategy will now automatically connect outputs with semantics it knows. Note that the <code>failure.validation</code> output can&#39;t be auto-connected since the semantic is unknown.</p>
+
+<p><img src="images/nested-open.png" ></p>
+
+<p>You need to specify that connection manually using <code>Output(:failure_validation)</code>. In the example to the right, we let the DSL take care of wiring this output to a specific task, and just say &quot;connect <code>Update</code>&#39;s validation failure output to the failure track&quot;.</p>
+
+<p><img src="images/nested-connected-color.png" ></p>
+
+<p>You now have two outputs going to the same next step, which is actually fine in both BPMN and Trailblazer. It&#39;s possible to <a href="#activity-output-color">rewire by color</a>, to a <a href="(#activity-output-id)">specific next task</a>, or to an <a href="#activity-output-end">existing or new end</a>.</p>
+<h2 id='activity-output-output-option'>Output: Output option</h2><h2 id='activity-output-id'>Output: Id</h2><h2 id='activity-output-color'>Output: Color</h2><h2 id='activity-output-end'>Output: End</h2><h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
 <h3 id='activity-call'>Call</h3><h2 id='activity-task-interface'>Task Interface</h2><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
 <blockquote>
@@ -556,7 +665,7 @@
 <p><img src="images/path-join.png" ></p>
 
 <p>Only when <code>find</code> returns the <code>Left</code> signal, the extra path is taken.</p>
-<h1 id='operation'>Operation</h1>
+<h2 id='activity-activity-interface'>Activity Interface</h2><h1 id='operation'>Operation</h1>
 <blockquote>
 <p>Example for an operation that doesn&#39;t use any TRB macros. It creates a fresh <code>Memo</code> instance.</p>
 </blockquote>
