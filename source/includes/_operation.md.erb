@@ -154,7 +154,7 @@ Again, the interpretation of the outcome is completely up to you. The result obj
 ## DSL
 
 ```ruby
-<%= snippet :operation, "end", hide: "methods" %>
+<%= snippet :operation, "end", collapse: "methods" %>
 ```
 
 The operation exposes a minimal DSL to create the underlying activity. An operation always maintains a `FastTrack` activity and hence allows to error out, branch, etc. The operation's DSL is [identical to `Activity::FastTrack`](#activity-fasttrack).
@@ -218,7 +218,7 @@ In addition to wiring options, there are a handful of other options known as _se
 > Assign names to tasks via the `:id` option, so overriding and debugging is easier.
 
 ```ruby
-<%= snippet :operation, "id", file: "docs/wiring_test.rb", hide: "id-methods" %>
+<%= snippet :operation, "id", file: "docs/wiring_test.rb", collapse: "id-methods" %>
 ```
 
 You can name each step using the `:id` option. Keep in mind that names are part of your public API and should be "forever".
@@ -255,7 +255,7 @@ All steps are inherited, then the deletion is applied, as the introspection show
 To insert a new task before an existing one, for example in a subclass, use `:before`.
 
 ```ruby
-<%= snippet :operation, "before", file: "docs/wiring_test.rb", hide: "before-methods" %>
+<%= snippet :operation, "before", file: "docs/wiring_test.rb", collapse: "before-methods" %>
 ```
 The circuit now yields a new `policy` step before the inherited tasks.
 
@@ -265,7 +265,7 @@ The circuit now yields a new `policy` step before the inherited tasks.
 ## Sequence Options: after
 
 ```ruby
-<%= snippet :operation, "after", file: "docs/wiring_test.rb", hide: "after-methods" %>
+<%= snippet :operation, "after", file: "docs/wiring_test.rb", collapse: "after-methods" %>
 ```
 
 ```ruby
@@ -280,7 +280,7 @@ The task is inserted after, as the introspection shows.
 ## Sequence Options: replace
 
 ```ruby
-<%= snippet :operation, "replace", file: "docs/wiring_test.rb", hide: "replace-methods" %>
+<%= snippet :operation, "replace", file: "docs/wiring_test.rb", collapse: "replace-methods" %>
 ```
 
 ```ruby
@@ -300,7 +300,7 @@ The `:group` option is the ideal solution to create template operations, where y
 ```
 
 ```ruby
-<%= snippet :operation, "template", file: "docs/doormat_test.rb", hide: "tmethods" %>
+<%= snippet :operation, "template", file: "docs/doormat_test.rb", collapse: "tmethods" %>
 ```
 The resulting circuit, admittedly rather useless, will look as follows.
 
@@ -309,7 +309,7 @@ The resulting circuit, admittedly rather useless, will look as follows.
 Subclasses can now insert their actual steps without any sequence options needed.
 
 ```ruby
-<%= snippet :operation, "template-user", file: "docs/doormat_test.rb", hide: "meths" %>
+<%= snippet :operation, "template-user", file: "docs/doormat_test.rb", collapse: "meths" %>
 ```
 
 Since all logging steps defined in the template operation are placed into groups, the concrete steps sit in the middle.
@@ -326,6 +326,53 @@ only flow control
 Orchestration
 
 <!-- @notoc -->
+## Recover
+
+```ruby
+<%= snippet :operation, "fail-success", file: "docs/wiring_test.rb" %>
+```
+
+> The recover tasks themselves can now return a boolean to direct the flow.
+
+```ruby
+class Memo::Upload < Trailblazer::Operation
+  # ...
+  def upload_to_s3(ctx, s3:, file:, **)
+    s3.upload_file(file) #=> returns true or false
+  end
+end
+```
+
+Error handlers on the left track are the perfect place to "fix things". This means you might want to return to the right track. We call this a _recover_ task. For example, if you need to upload a file to S3, if that doesn't work, try with Azure, and if that still doesn't play, with Backblaze. This is a [common pattern when dealing with external APIs](https://github.com/trailblazer/trailblazer/issues/190).
+
+You can simply put recover steps on the left track, and wire their `:success` output back to the right track (which the operation knows as `:success`).
+
+
+The resulting circuit looks as follows.
+
+<img src="/images/recover.png">
+
+The `Output(:success)` DSL call will find the task's `:success`-colored output and connect it to the right (`:success`) track.
+
+
+<!-- @notoc -->
+## Decider
+
+```ruby
+<%= snippet :operation, "decider", file: "docs/wiring_test.rb" %>
+```
+
+If you want to stay on one path but need to branch-and-return to model a decision, use the decider pattern.
+
+In this example, the success track from `find_model` will go to `update` whereas the `failure` output gets connected to `create`, giving the circuit a diamond-shaped flow.
+
+<img src="/images/decider.png">
+
+Note that we're using properties of the _magnetic_ API here: by polarizing (or _coloring_) the `failure` output of `find_model` to `:create_route` (which is a random name we picked), and making `create` being attracted to that very polarization, the failure output "snaps" to that task automatically.
+
+The cool feature with the magnetic API in this example is that you don't need to know what is the specific target of a connection, allowing to push multiple tasks onto that new `:create_route` track, if you needed that.
+
+<!-- @notoc -->
 ## Doormat Step
 
 Very often, you want to have one or multiple "last steps" in an operation, for instance to generically log errors or success messages. We call this a _doormat step_.
@@ -333,7 +380,7 @@ Very often, you want to have one or multiple "last steps" in an operation, for i
 ### Doormat Step: Before
 
 ```ruby
-<%= snippet :operation, "doormat-before", file: "docs/doormat_test.rb", hide: "im" %>
+<%= snippet :operation, "doormat-before", file: "docs/doormat_test.rb", collapse: "im" %>
 ```
 
 The most elementary way to achieve this is using the `:before` option.
@@ -346,7 +393,7 @@ Note that `:before` is a DSL option and not exactly related to the wiring API. U
 ### Doormat Step: Group
 
 ```ruby
-<%= snippet :operation, "doormat-group", file: "docs/doormat_test.rb", hide: "methods" %>
+<%= snippet :operation, "doormat-group", file: "docs/doormat_test.rb", collapse: "methods" %>
 ```
 
 An easier way to place particular steps always into the end section is to use the `:group` option.
