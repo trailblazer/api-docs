@@ -277,6 +277,12 @@
                     <a href="#operation-debugging" class="toc-h2 toc-link" data-title="debugging">Debugging</a>
                   </li>
                   <li>
+                    <a href="#operation-dsl-sequence-options" class="toc-h2 toc-link" data-title="dsl-sequence-options">DSL: Sequence Options</a>
+                  </li>
+                  <li>
+                    <a href="#operation-dsl-group" class="toc-h2 toc-link" data-title="dsl-group">DSL: Group</a>
+                  </li>
+                  <li>
                     <a href="#operation-patterns" class="toc-h2 toc-link" data-title="patterns">Patterns</a>
                   </li>
               </ul>
@@ -835,10 +841,214 @@
 <p>Check out the <a href="#test"><code>trailblazer-test</code> gem</a> for advanced testing strategies, dependency injections instead of mocking, and factory chains.</p>
 
 <p>We&#39;re working on an RSpec adapter, too.</p>
-<h2 id='operation-debugging'>Debugging</h2><h3 id='operation-tracing'>Tracing</h3><h3 id='operation-taskwrap'>taskWrap</h3><h2 id='operation-patterns'>Patterns</h2>
+<h2 id='operation-debugging'>Debugging</h2><h3 id='operation-tracing'>Tracing</h3><h3 id='operation-taskwrap'>taskWrap</h3><h2 id='operation-dsl-sequence-options'>DSL: Sequence Options</h2>
+<p>In addition to wiring options, there are a handful of other options known as <em>sequence options</em>. They configure where a task goes when inserted, and helps with introspection and tracing.</p>
+
+<!-- @notoc -->
+<h2 id='operation-sequence-options-id'>Sequence Options: id</h2>
+<blockquote>
+<p>Assign names to tasks via the <code>:id</code> option, so overriding and debugging is easier.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:create_model</span><span class="p">,</span> <span class="ss">id: </span><span class="s2">"create_memo"</span>
+  <span class="n">step</span> <span class="ss">:validate</span><span class="p">,</span>     <span class="ss">id: </span><span class="s2">"validate_params"</span>
+  <span class="n">step</span> <span class="ss">:save</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>You can name each step using the <code>:id</code> option. Keep in mind that names are part of your public API and should be &quot;forever&quot;.</p>
+
+<p>This is advisable when planning to override a step via a module or inheritance or when reconnecting it. Naming also shows up in tracing and introspection. Defaults names are given to steps without the <code>:id</code> options, but these might be awkward sometimes.</p>
+
+<blockquote>
+<p>IDs can be beneficial for introspection.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span><span class="p">.</span><span class="nf">introspect</span><span class="p">(</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="p">)</span>
+<span class="c1">#=&gt; [&gt;create_memo,&gt;validate_params,&gt;save]</span>
+
+</code></pre>
+<!-- @notoc -->
+<h2 id='operation-sequence-options-delete'>Sequence Options: delete</h2>
+<p>When it&#39;s necessary to remove a task, you can use <code>:delete</code>.</p>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">::</span><span class="no">Admin</span> <span class="o">&lt;</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span>
+  <span class="n">step</span> <span class="kp">nil</span><span class="p">,</span> <span class="ss">delete: </span><span class="s2">"validate_params"</span><span class="p">,</span> <span class="ss">id: </span><span class="s2">""</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>The <code>:delete</code> option can be helpful when using modules or inheritance to build concrete operations from base operations. In this example, a very poor one, the <code>validate</code> task gets removed, assuming the <code>Admin</code> won&#39;t need a validation</p>
+<pre class="highlight ruby tab-ruby"><code><span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span><span class="p">.</span><span class="nf">introspect</span><span class="p">(</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">::</span><span class="no">Admin</span> <span class="p">)</span>
+<span class="c1">#=&gt; [&gt;create_model,&gt;save]</span>
+
+</code></pre>
+<p>All steps are inherited, then the deletion is applied, as the introspection shows.</p>
+
+<p><img src="images/memo-delete.png"></p>
+
+<!-- @notoc -->
+<h2 id='operation-sequence-options-before'>Sequence Options: before</h2>
+<p>To insert a new task before an existing one, for example in a subclass, use <code>:before</code>.</p>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">::</span><span class="no">Authorized</span> <span class="o">&lt;</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span>
+  <span class="n">step</span> <span class="ss">:policy</span><span class="p">,</span> <span class="ss">before: </span><span class="s2">"create_memo"</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>The circuit now yields a new <code>policy</code> step before the inherited tasks.</p>
+
+<p><img src="images/memo-before.png"></p>
+
+<!-- @notoc -->
+<h2 id='operation-sequence-options-after'>Sequence Options: after</h2><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">::</span><span class="no">Logging</span> <span class="o">&lt;</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span>
+  <span class="n">step</span> <span class="ss">:logger</span><span class="p">,</span> <span class="ss">after: </span><span class="s2">"validate_params"</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre><pre class="highlight ruby tab-ruby"><code>
+<span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span><span class="p">.</span><span class="nf">introspect</span><span class="p">(</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="o">::</span><span class="no">Logging</span> <span class="p">)</span>
+<span class="c1">#=&gt; [&gt;create_memo,&gt;validate_params,&gt;logger,&gt;save]</span>
+
+</code></pre>
+<p>To insert after an existing task, you might have guessed it, use the <code>:after</code> option with the exact same semantics as <code>:before</code>.</p>
+
+<p>The task is inserted after, as the introspection shows.</p>
+
+<!-- @notoc -->
+<h2 id='operation-sequence-options-replace'>Sequence Options: replace</h2><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Update</span> <span class="o">&lt;</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span>
+  <span class="n">step</span> <span class="ss">:find_model</span><span class="p">,</span> <span class="ss">replace: </span><span class="s2">"create_memo"</span><span class="p">,</span> <span class="ss">id: </span><span class="s2">"update_memo"</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre><pre class="highlight ruby tab-ruby"><code><span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span><span class="p">.</span><span class="nf">introspect</span><span class="p">(</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Update</span> <span class="p">)</span>
+<span class="c1">#=&gt; [&gt;update_memo,&gt;validate_params,&gt;save]</span>
+
+</code></pre>
+<p>Replacing an existing task is done using <code>:replace</code>.</p>
+
+<p>Replacing, obviously, only replaces in the applied class, not in the superclass.</p>
+<h2 id='operation-dsl-group'>DSL: Group</h2>
+<p>The <code>:group</code> option is the ideal solution to create template operations, where you declare a basic circuit layout which can then be enriched by subclasses.</p>
+<pre class="highlight ruby tab-ruby"><code><span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span><span class="p">.</span><span class="nf">introspect</span><span class="p">(</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="p">)</span>
+<span class="c1">#=&gt; [&gt;create_memo,&gt;validate_params,&gt;save]</span>
+
+</code></pre><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Operation</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:log_call</span><span class="p">,</span>  <span class="ss">group: :start</span>
+  <span class="n">step</span> <span class="ss">:log_success</span><span class="p">,</span>  <span class="ss">group: :end</span><span class="p">,</span> <span class="ss">before: </span><span class="s2">"End.success"</span>
+  <span class="nb">fail</span> <span class="ss">:log_errors</span><span class="p">,</span>   <span class="ss">group: :end</span><span class="p">,</span> <span class="ss">before: </span><span class="s2">"End.failure"</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>The resulting circuit, admittedly rather useless, will look as follows.</p>
+
+<p><img src="images/group-template.png"></p>
+
+<p>Subclasses can now insert their actual steps without any sequence options needed.</p>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:create_model</span>
+  <span class="n">step</span> <span class="ss">:validate</span>
+  <span class="n">step</span> <span class="ss">:save</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>Since all logging steps defined in the template operation are placed into groups, the concrete steps sit in the middle.</p>
+
+<p><img src="images/doormat-before.png"></p>
+
+<p>It is perfectly fine to use the <code>:group</code> and other sequence options again, in subclasses. Also, multiple inheritance levels will work.</p>
+<h2 id='operation-patterns'>Patterns</h2>
 <p>no god object
 only flow control
 Orchestration</p>
+
+<!-- @notoc -->
+<h2 id='operation-recover'>Recover</h2><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Upload</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:upload_to_s3</span>
+  <span class="nb">fail</span> <span class="ss">:upload_to_azure</span><span class="p">,</span>  <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:success</span>
+  <span class="nb">fail</span> <span class="ss">:upload_to_b2</span><span class="p">,</span>     <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:success</span>
+  <span class="nb">fail</span> <span class="ss">:log_problem</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<blockquote>
+<p>The recover tasks themselves can now return a boolean to direct the flow.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Upload</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="c1"># ...</span>
+  <span class="k">def</span> <span class="nf">upload_to_s3</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">s3</span><span class="p">:,</span> <span class="n">file</span><span class="p">:,</span> <span class="o">**</span><span class="p">)</span>
+    <span class="n">s3</span><span class="p">.</span><span class="nf">upload_file</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="c1">#=&gt; returns true or false</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+<p>Error handlers on the left track are the perfect place to &quot;fix things&quot;. This means you might want to return to the right track. We call this a <em>recover</em> task. For example, if you need to upload a file to S3, if that doesn&#39;t work, try with Azure, and if that still doesn&#39;t play, with Backblaze. This is a <a href="https://github.com/trailblazer/trailblazer/issues/190">common pattern when dealing with external APIs</a>.</p>
+
+<p>You can simply put recover steps on the left track, and wire their <code>:success</code> output back to the right track (which the operation knows as <code>:success</code>).</p>
+
+<p>The resulting circuit looks as follows.</p>
+
+<p><img src="images/recover.png"></p>
+
+<p>The <code>Output(:success)</code> DSL call will find the task&#39;s <code>:success</code>-colored output and connect it to the right (<code>:success</code>) track.</p>
+
+<!-- @notoc -->
+<h2 id='operation-decider'>Decider</h2><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Upsert</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:find_model</span><span class="p">,</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:create_route</span>
+  <span class="n">step</span> <span class="ss">:update</span>
+  <span class="n">step</span> <span class="ss">:create</span><span class="p">,</span> <span class="ss">magnetic_to: </span><span class="p">[</span><span class="ss">:create_route</span><span class="p">]</span>
+  <span class="n">step</span> <span class="ss">:save</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>If you want to stay on one path but need to branch-and-return to model a decision, use the decider pattern.</p>
+
+<p>In this example, the success track from <code>find_model</code> will go to <code>update</code> whereas the <code>failure</code> output gets connected to <code>create</code>, giving the circuit a diamond-shaped flow.</p>
+
+<p><img src="images/decider.png"></p>
+
+<p>Note that we&#39;re using properties of the <em>magnetic</em> API here: by polarizing (or <em>coloring</em>) the <code>failure</code> output of <code>find_model</code> to <code>:create_route</code> (which is a random name we picked), and making <code>create</code> being attracted to that very polarization, the failure output &quot;snaps&quot; to that task automatically.</p>
+
+<p>The cool feature with the magnetic API in this example is that you don&#39;t need to know what is the specific target of a connection, allowing to push multiple tasks onto that new <code>:create_route</code> track, if you needed that.</p>
+
+<!-- @notoc -->
+<h2 id='operation-doormat-step'>Doormat Step</h2>
+<p>Very often, you want to have one or multiple &quot;last steps&quot; in an operation, for instance to generically log errors or success messages. We call this a <em>doormat step</em>.</p>
+<h3 id='operation-doormat-step-before'>Doormat Step: Before</h3><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:create_model</span>
+  <span class="n">step</span> <span class="ss">:log_success</span>
+
+  <span class="n">step</span> <span class="ss">:validate</span><span class="p">,</span> <span class="ss">before: :log_success</span>
+  <span class="n">step</span> <span class="ss">:save</span><span class="p">,</span>     <span class="ss">before: :log_success</span>
+
+  <span class="nb">fail</span> <span class="ss">:log_errors</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>The most elementary way to achieve this is using the <code>:before</code> option.</p>
+
+<p>Note that <code>:before</code> is a DSL option and not exactly related to the wiring API. Using this option, the inserted step will be &quot;moved up&quot; as if you had actually called it before the targeted <code>:before</code> step.</p>
+
+<p><img src="images/doormat-before.png"></p>
+<h3 id='operation-doormat-step-group'>Doormat Step: Group</h3><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:create_model</span>
+  <span class="n">step</span> <span class="ss">:log_success</span><span class="p">,</span>  <span class="ss">group: :end</span><span class="p">,</span> <span class="ss">before: </span><span class="s2">"End.success"</span>
+
+  <span class="n">step</span> <span class="ss">:validate</span>
+  <span class="n">step</span> <span class="ss">:save</span>
+
+  <span class="nb">fail</span> <span class="ss">:log_errors</span><span class="p">,</span>   <span class="ss">group: :end</span><span class="p">,</span> <span class="ss">before: </span><span class="s2">"End.failure"</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>An easier way to place particular steps always into the end section is to use the <code>:group</code> option.</p>
+
+<p>The resulting <code>Memo::Create</code>&#39;s circuit is identical to the <a href="#doormat-step-before">last example</a>.</p>
+
+<p>Note how this can be used for <a href="#group">&quot;template operations&quot;</a> where the inherited class really only adds its concrete steps into the existing layout.</p>
 <h1 id='trailblazer'>Trailblazer</h1>
 <aside class="notice">
   Populate me
