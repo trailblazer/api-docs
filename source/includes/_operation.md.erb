@@ -208,6 +208,117 @@ We're working on an RSpec adapter, too.
 
 ### taskWrap
 
+## DSL: Sequence Options
+
+In addition to wiring options, there are a handful of other options known as _sequence options_. They configure where a task goes when inserted, and helps with introspection and tracing.
+
+<!-- @notoc -->
+## Sequence Options: id
+
+> Assign names to tasks via the `:id` option, so overriding and debugging is easier.
+
+```ruby
+<%= snippet :operation, "id", file: "docs/wiring_test.rb", hide: "id-methods" %>
+```
+
+You can name each step using the `:id` option. Keep in mind that names are part of your public API and should be "forever".
+
+This is advisable when planning to override a step via a module or inheritance or when reconnecting it. Naming also shows up in tracing and introspection. Defaults names are given to steps without the `:id` options, but these might be awkward sometimes.
+
+> IDs can be beneficial for introspection.
+
+```ruby
+<%= snippet :operation, "id-inspect", file: "docs/wiring_test.rb" %>
+```
+
+<!-- @notoc -->
+## Sequence Options: delete
+
+When it's necessary to remove a task, you can use `:delete`.
+
+```ruby
+<%= snippet :operation, "delete", file: "docs/wiring_test.rb" %>
+```
+The `:delete` option can be helpful when using modules or inheritance to build concrete operations from base operations. In this example, a very poor one, the `validate` task gets removed, assuming the `Admin` won't need a validation
+
+```ruby
+<%= snippet :operation, "delete-inspect", file: "docs/wiring_test.rb" %>
+```
+
+All steps are inherited, then the deletion is applied, as the introspection shows.
+
+<img src="/images/memo-delete.png">
+
+<!-- @notoc -->
+## Sequence Options: before
+
+To insert a new task before an existing one, for example in a subclass, use `:before`.
+
+```ruby
+<%= snippet :operation, "before", file: "docs/wiring_test.rb", hide: "before-methods" %>
+```
+The circuit now yields a new `policy` step before the inherited tasks.
+
+<img src="/images/memo-before.png">
+
+<!-- @notoc -->
+## Sequence Options: after
+
+```ruby
+<%= snippet :operation, "after", file: "docs/wiring_test.rb", hide: "after-methods" %>
+```
+
+```ruby
+
+<%= snippet :operation, "after-inspect", file: "docs/wiring_test.rb" %>
+```
+To insert after an existing task, you might have guessed it, use the `:after` option with the exact same semantics as `:before`.
+
+The task is inserted after, as the introspection shows.
+
+<!-- @notoc -->
+## Sequence Options: replace
+
+```ruby
+<%= snippet :operation, "replace", file: "docs/wiring_test.rb", hide: "replace-methods" %>
+```
+
+```ruby
+<%= snippet :operation, "replace-inspect", file: "docs/wiring_test.rb" %>
+```
+
+Replacing an existing task is done using `:replace`.
+
+Replacing, obviously, only replaces in the applied class, not in the superclass.
+
+## DSL: Group
+
+The `:group` option is the ideal solution to create template operations, where you declare a basic circuit layout which can then be enriched by subclasses.
+
+```ruby
+<%= snippet :operation, "id-inspect", file: "docs/wiring_test.rb" %>
+```
+
+```ruby
+<%= snippet :operation, "template", file: "docs/doormat_test.rb", hide: "tmethods" %>
+```
+The resulting circuit, admittedly rather useless, will look as follows.
+
+<img src="/images/group-template.png">
+
+Subclasses can now insert their actual steps without any sequence options needed.
+
+```ruby
+<%= snippet :operation, "template-user", file: "docs/doormat_test.rb", hide: "meths" %>
+```
+
+Since all logging steps defined in the template operation are placed into groups, the concrete steps sit in the middle.
+
+<img src="/images/doormat-before.png">
+
+It is perfectly fine to use the `:group` and other sequence options again, in subclasses. Also, multiple inheritance levels will work.
+
+
 ## Patterns
 
 no god object
