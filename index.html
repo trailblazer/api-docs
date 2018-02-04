@@ -236,28 +236,28 @@
                     <a href="#activity-task-interface" class="toc-h2 toc-link" data-title="task-interface">Task Interface</a>
                   </li>
                   <li>
+                    <a href="#activity-step-interface" class="toc-h2 toc-link" data-title="step-interface">Step Interface</a>
+                  </li>
+                  <li>
+                    <a href="#activity-activity-interface" class="toc-h2 toc-link" data-title="activity-interface">Activity Interface</a>
+                  </li>
+                  <li>
                     <a href="#activity-composition" class="toc-h2 toc-link" data-title="composition">Composition</a>
                   </li>
                   <li>
                     <a href="#activity-composition-merge-api" class="toc-h2 toc-link" data-title="composition-merge-api">Composition: Merge API</a>
                   </li>
                   <li>
-                    <a href="#activity-composition-nested" class="toc-h2 toc-link" data-title="composition-nested">Composition: Nested</a>
+                    <a href="#activity-composition-subprocess" class="toc-h2 toc-link" data-title="composition-subprocess">Composition: Subprocess</a>
                   </li>
                   <li>
                     <a href="#activity-end" class="toc-h2 toc-link" data-title="end">End</a>
-                  </li>
-                  <li>
-                    <a href="#activity-dsl" class="toc-h2 toc-link" data-title="dsl">DSL</a>
                   </li>
                   <li>
                     <a href="#activity-event" class="toc-h2 toc-link" data-title="event">Event</a>
                   </li>
                   <li>
                     <a href="#activity-path" class="toc-h2 toc-link" data-title="path">Path</a>
-                  </li>
-                  <li>
-                    <a href="#activity-activity-interface" class="toc-h2 toc-link" data-title="activity-interface">Activity Interface</a>
                   </li>
               </ul>
           </li>
@@ -426,7 +426,7 @@
 <p>Per convention, activities are <code>module</code>s and not classes. A module in Ruby is just a namespace and not automatically supposed to be used as a mixin, which we refrain from. Instead, think of an activity module as a <code>module</code> in Elixir, which is simply a collection of stateless functions. Modules have two major benefits.</p>
 
 <ul>
-<li>You can not subclass actitivies. This might sound counter-intuitive, but activity gives you the much more sustainable tool of compositions.</li>
+<li>You can not subclass actitivies. This might sound counter-intuitive, but activity gives you the much more sustainable tool of <a href="#activity-composition">compositions</a>.</li>
 <li>Modules provide <code>module_function</code> to declare every method as a class method. This makes the module more readable and allows to use <code>method</code> to attach a module method to a step.</li>
 </ul>
 <h3 id='activity-example'>Example</h3>
@@ -438,7 +438,17 @@
 
 <p><img src="images/activity-overview.png" ></p>
 
-<p>Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the <em>step interface</em> returns <code>trusy</code> of <code>falsey</code> and thus instructs the activity what way to choose from here.</p>
+<p>The following principles apply.</p>
+
+<ul>
+<li>Each box in this diagram is called a task or step, depending on its interface, but we&#39;re not too strict here.</li>
+<li>Each box - in code - is represented by a callable object you provide (usually that&#39;s a <code>method</code> as seen to the right, or another nested <code>Activity</code>).</li>
+<li>Depending on the return value of the task code, the next connection is picked.</li>
+<li>Per default, the <code>ctx</code> object is passed through from task to task and allows to write state.</li>
+<li>An activity stops when hitting an end event.</li>
+</ul>
+
+<p>Activities are incredibly simple, even though the DSL might look very powerful. Don&#39;t worry, the DSL code is completely separated from the run-time code, and you only need to understand a handful of concepts such as task- and step interface, outputs, semantics, and colors (also known as <em>polarizations</em>) and you will be able to write and maintain more complex workflows easily.</p>
 <h2 id='activity-anatomy'>Anatomy</h2>
 <p>An activity is a set of tasks, with at least one start event and one or multiple end events. A task can be any Ruby callable that follows the <a href="#activity-task-interface"><em>task interface</em></a>, and it can even be another activity itself.</p>
 
@@ -545,7 +555,7 @@
 
 <p>When using <code>task</code> or other DSL methods to add a task, depending on the strategy, the DSL will automatically provide default outputs as you see on the right. Since, now, the outputs are provided, the DSL strategy will now automatically connect the outputs to the next task.</p>
 
-<p>For example, with <code>Path()</code>, a <code>:success</code> step will be wired to the next <code>task</code> call. In a <code>Railway</code>, the same happens, plus a <code>:failure</code> output will be connected to the error track for you.</p>
+<p>For example, with <code>Path()</code>, a <code>:success</code> output will be wired to the next <code>task</code> call. In a <code>Railway</code>, the same happens, plus a <code>:failure</code> output will be connected to the error track for you.</p>
 
 <!-- @notoc -->
 <h2 id='activity-output-defaults-for-plain-task'>Output: Defaults for Plain Task</h2>
@@ -574,7 +584,7 @@
 
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">),</span> <span class="ss">fast_track: </span><span class="kp">true</span>
 </code></pre>
-<p>When inserting a task via the DSL, everything works identical to the behavior when <a href="#activity-output-nested">adding <code>Nested</code> activities</a> except for one thing: Since the DSL can&#39;t query a callable Ruby object for its outputs, it defaults the outputs as follows.</p>
+<p>When inserting a task via the DSL, everything works identical to the behavior when <a href="#activity-output-subprocess">adding <code>Nested</code> activities</a> except for one thing: Since the DSL can&#39;t query a callable Ruby object for its outputs, it defaults the outputs as follows.</p>
 
 <p>In a <code>Path()</code>-based activity, the <code>task</code> method always adds a <code>:success</code> output with a <code>Right</code> signal (left diagram).</p>
 
@@ -585,8 +595,8 @@
 <p>Note that adding <code>:outputs</code> to a task doesn&#39;t mean they will be connected, it&#39;s the DSL&#39;s job now to wire those to the next task, unless you <a href="#activity-output-id">specify the connection explicitly</a>.</p>
 
 <!-- @notoc -->
-<h2 id='activity-output-nested'>Output: Nested</h2>
-<p>Activities can be nested. This is usually done with the <code>Nested</code> macro that will automatically define <code>:outputs</code> for the nested activity by querying the latter via its <code>output</code> method. <code>Nested</code> assumes that the nested activity follows the <a href="#activity-activity-interface">activity-interface</a>.</p>
+<h2 id='activity-output-subprocess'>Output: Subprocess</h2>
+<p>Activities can be nested. This is usually done with the <a href="#activity-composition-subprocess"><code>Subprocess</code> macro</a> that will automatically define <code>:outputs</code> for the nested activity by querying the latter via its <code>output</code> method. <code>Subprocess</code> assumes that the nested activity follows the <a href="#activity-activity-interface">Activity interface</a>.</p>
 
 <p>Suppose the following <code>Update::Model</code> activity needs to be nested into another activity <code>Update</code>.</p>
 
@@ -595,7 +605,7 @@
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
 
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
-  <span class="n">step</span> <span class="no">Nested</span><span class="p">(</span> <span class="no">Update</span><span class="o">::</span><span class="no">Model</span> <span class="p">)</span>
+  <span class="n">step</span> <span class="no">Subprocess</span><span class="p">(</span> <span class="no">Update</span><span class="o">::</span><span class="no">Model</span> <span class="p">)</span>
     <span class="c1">#=&gt; defaults:</span>
     <span class="c1"># outputs: {</span>
     <span class="c1">#   success:            Output{&lt;Update::Right&gt;:success},</span>
@@ -636,6 +646,10 @@
 <h3 id='activity-call'>Call</h3><h2 id='activity-task-interface'>Task Interface</h2>
 <p>Memo::Find.outputs[:success]
 Memo::Find.outputs[:failure]</p>
+<h2 id='activity-step-interface'>Step Interface</h2><h2 id='activity-activity-interface'>Activity Interface</h2>
+<p>call
+outputs
+to_h</p>
 <h2 id='activity-composition'>Composition</h2>
 <p>A main intent of Trailblazer&#39;s activities is reusability. As opposed to TRB 1.x, where inheritance was overused, we now encourage compositions. You have two tools to reuse activities with others and compose more complex workflows.</p>
 
@@ -643,7 +657,9 @@ Memo::Find.outputs[:failure]</p>
 <li>The <em>Merge API</em> allows to &quot;copy&quot; activities or parts of it into others and hence merge them.</li>
 <li>You can use <em>nesting</em> to call acitivies from activities and maintain cleanly encapsulated flows.</li>
 </ol>
-<h2 id='activity-composition-merge-api'>Composition: Merge API</h2><h2 id='activity-composition-nested'>Composition: Nested</h2>
+<h2 id='activity-composition-merge-api'>Composition: Merge API</h2><h2 id='activity-composition-subprocess'>Composition: Subprocess</h2>
+<p>To model more complex activities and maximize reusability, a task can be an activity itself. This is called <em>nesting</em>, in BPMN, a nested activity is called <em>Subprocess</em>.</p>
+
 <p><aside class="notice">When nesting activities, <a href="#activity-output">all mechanics from <code>Output</code></a> apply, it&#39;s just the output <em>signal</em> that is slightly different.</aside></p>
 <h3 id='activity-automatic-wiring'>Automatic Wiring</h3>
 <blockquote>
@@ -726,7 +742,50 @@ Memo::Find.outputs[:failure]</p>
 <p><img src="images/nested-rewire.png"></p>
 
 <p>The <code>:id_missing</code> end is now connected to the <code>:failure</code> track, which happens to run directly into its end. Keep in mind that you can use all <a href="#activity-output">mechanics from <code>Output()</code></a> and wire nested ends to just anything.</p>
-<h2 id='activity-end'>End</h2><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
+<h3 id='activity-subprocess'>Subprocess</h3>
+<blockquote>
+<p>Use the <code>Subprocess()</code> macro if you want to save typing and take advantage of <code>Output()</code>.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
+  <span class="n">step</span> <span class="no">Subprocess</span><span class="p">(</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span> <span class="p">),</span>
+    <span class="no">Output</span><span class="p">(</span><span class="ss">:model_not_found</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:err404</span><span class="p">),</span>
+    <span class="no">Output</span><span class="p">(</span><span class="ss">:id_missing</span><span class="p">)</span>      <span class="o">=&gt;</span> <span class="ss">:failure</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>The <code>activity</code> gem provides the <code>Subprocess</code> macro as a short-cut when nesting activities. It will produce an identical circuit as the one above by automatically extracting and passing <code>:outputs</code> to the DSL. You may then <a href="#activity-output">use <code>Output()</code> to reference outputs</a> in a more convenient way, and without having to connect automatically matched ones.</p>
+<h2 id='activity-end'>End</h2>
+<blockquote>
+<p>The <code>End()</code> helper in combination with <code>Output()</code> connects an output with a newly created end.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Find</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:id_present?</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:id_missing</span><span class="p">)</span> <span class="c1"># new semantic.</span>
+  <span class="c1"># step method(:find_model),  Output(:failure) =&gt; End(:failure)    # existing semantic. DOESN'T WORK, YET.</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">),</span>  <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="s2">"End.failure"</span>    <span class="c1"># existing end.</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>Outgoing connections from a task can either go to another task, or to an end event. Every strategy comes with one or more default ends, for example <code>Railway()</code> has two ends, respectively one with <code>:success</code> and one with <code>:failure</code> semantic.</p>
+
+<p>The <code>End()</code> helper allows you to quickly connect a particular task to a new end.</p>
+
+<p>This is incredibly helpful if further processing doesn&#39;t make sense after this task &quot;failed&quot; (or whatever made you choose hitting the new end), and you want to know &quot;what happened&quot;. For instance, a policy breach doesn&#39;t need to error out generically, but should end in a separate end with a specific semantic (e.g. <code>:policy_breach</code>). When running that activity returns the policy breach end, you know the execution stopped after the policy task.</p>
+
+<p>On the right side, check out how to use <code>End()</code> with <code>Output()</code>.</p>
+
+<aside class="warning">
+Note that, in order to reference an _existing_ end, you currently have to use an [ID reference](#activity-output-id).
+</aside>
+
+<p>The respective diagram will have three ends.</p>
+
+<p><img src="images/end.png"></p>
+<h2 id='activity-event'>Event</h2>
 <blockquote>
 <p>Always build end instances via the <code>End</code> builder.</p>
 </blockquote>
@@ -766,7 +825,7 @@ Memo::Find.outputs[:failure]</p>
 <p><img src="images/path-join.png" ></p>
 
 <p>Only when <code>find</code> returns the <code>Left</code> signal, the extra path is taken.</p>
-<h2 id='activity-activity-interface'>Activity Interface</h2><h1 id='operation'>Operation</h1>
+<h1 id='operation'>Operation</h1>
 <blockquote>
 <p>Example for an operation that doesn&#39;t use any TRB macros. It creates a fresh <code>Memo</code> instance.</p>
 </blockquote>
