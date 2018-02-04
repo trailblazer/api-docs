@@ -236,6 +236,18 @@
                     <a href="#activity-task-interface" class="toc-h2 toc-link" data-title="task-interface">Task Interface</a>
                   </li>
                   <li>
+                    <a href="#activity-composition" class="toc-h2 toc-link" data-title="composition">Composition</a>
+                  </li>
+                  <li>
+                    <a href="#activity-composition-merge-api" class="toc-h2 toc-link" data-title="composition-merge-api">Composition: Merge API</a>
+                  </li>
+                  <li>
+                    <a href="#activity-composition-nested" class="toc-h2 toc-link" data-title="composition-nested">Composition: Nested</a>
+                  </li>
+                  <li>
+                    <a href="#activity-end" class="toc-h2 toc-link" data-title="end">End</a>
+                  </li>
+                  <li>
                     <a href="#activity-dsl" class="toc-h2 toc-link" data-title="dsl">DSL</a>
                   </li>
                   <li>
@@ -621,7 +633,100 @@
 <!-- @notoc -->
 <h2 id='activity-output-end'>Output: End</h2><h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
-<h3 id='activity-call'>Call</h3><h2 id='activity-task-interface'>Task Interface</h2><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
+<h3 id='activity-call'>Call</h3><h2 id='activity-task-interface'>Task Interface</h2>
+<p>Memo::Find.outputs[:success]
+Memo::Find.outputs[:failure]</p>
+<h2 id='activity-composition'>Composition</h2>
+<p>A main intent of Trailblazer&#39;s activities is reusability. As opposed to TRB 1.x, where inheritance was overused, we now encourage compositions. You have two tools to reuse activities with others and compose more complex workflows.</p>
+
+<ol>
+<li>The <em>Merge API</em> allows to &quot;copy&quot; activities or parts of it into others and hence merge them.</li>
+<li>You can use <em>nesting</em> to call acitivies from activities and maintain cleanly encapsulated flows.</li>
+</ol>
+<h2 id='activity-composition-merge-api'>Composition: Merge API</h2><h2 id='activity-composition-nested'>Composition: Nested</h2>
+<p><aside class="notice">When nesting activities, <a href="#activity-output">all mechanics from <code>Output</code></a> apply, it&#39;s just the output <em>signal</em> that is slightly different.</aside></p>
+<h3 id='activity-automatic-wiring'>Automatic Wiring</h3>
+<blockquote>
+<p>The nested activity is a simple Railway with two ends.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Find</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:id_present?</span><span class="p">)</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<blockquote>
+<p>The composer is a Railway as well, and automatically &quot;understands&quot; how to wire the nested&#39;s ends.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
+  <span class="n">step</span> <span class="ss">task: </span><span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">,</span> <span class="ss">outputs: </span><span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>Since all activities expose the <a href="#activity-task-interface"><em>Task interface</em></a>, you can nest by simply providing the contained activity as a task.</p>
+
+<p>When the nested activity doesn&#39;t have any custom ends, you can provide the <code>:outputs</code> option along with the nested&#39;s outputs without any need to manually reconnect. The outer Railway (the container) automatically understands how to connect the nested&#39;s ends.</p>
+
+<p><img src="images/nested-simple-railway.png"></p>
+
+<p>The automatic wiring of the inner activity works by matching semantics and colors: the inner <code>:success</code> end get connected to the <code>:success</code> path, the <code>:failure</code> end to the <code>:failure</code> path of the outer Railway.</p>
+<h3 id='activity-manual-wiring'>Manual wiring</h3>
+<blockquote>
+<p>By adding two custom ends, the inner activity now has four ends.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Find</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:id_present?</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:id_missing</span><span class="p">)</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">),</span>  <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:model_not_found</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<blockquote>
+<p>You can grab the nested ends&#39; outputs using <code>outputs[:semantic]</code> and wire them to custom connections.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
+  <span class="n">step</span> <span class="ss">task: </span><span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">,</span>
+    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:success</span><span class="p">]</span>         <span class="o">=&gt;</span> <span class="ss">:success</span><span class="p">,</span>
+    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:model_not_found</span><span class="p">]</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:err404</span><span class="p">),</span>
+    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:id_missing</span><span class="p">]</span>      <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:id_missing</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>Let&#39;s assume the nested, inner activity <code>Memo::Find</code> had three ends, with specific ends to indicate what went wrong, and where (see <a href="#activity-end">End</a>). These ends have custom semantics <code>:id_present</code> and <code>:model_not_found</code> and hence can&#39;t be connected automatically. You need to manually wire them to other tasks, tracks, or ends.</p>
+
+<p><img src="images/nested-manual-ends.png"></p>
+
+<p>Now, all ends from the inner activity have a matching end on the outside. This helps to manage the flow better, but is not always necessary.</p>
+<h3 id='activity-connect-to-color'>Connect to color</h3>
+<blockquote>
+<p>Instead of using <code>End</code>, you can also wire a nested output to a color, e.g. the outer <code>:failure</code> track.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
+  <span class="n">step</span> <span class="ss">task: </span><span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">,</span>
+    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:success</span><span class="p">]</span>         <span class="o">=&gt;</span> <span class="ss">:success</span><span class="p">,</span>
+    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:model_not_found</span><span class="p">]</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:err404</span><span class="p">),</span>
+    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:id_missing</span><span class="p">]</span>      <span class="o">=&gt;</span> <span class="ss">:failure</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>Sometimes, you might want to pool multiple inner ends or redirect them onto a track, instead of maintaining one end on the outside for each inner one. In this example, we redirect the <code>:id_missing</code> end to the generic <code>:failure</code> track.</p>
+
+<p><img src="images/nested-rewire.png"></p>
+
+<p>The <code>:id_missing</code> end is now connected to the <code>:failure</code> track, which happens to run directly into its end. Keep in mind that you can use all <a href="#activity-output">mechanics from <code>Output()</code></a> and wire nested ends to just anything.</p>
+<h2 id='activity-end'>End</h2><h2 id='activity-dsl'>DSL</h2><h2 id='activity-event'>Event</h2>
 <blockquote>
 <p>Always build end instances via the <code>End</code> builder.</p>
 </blockquote>
