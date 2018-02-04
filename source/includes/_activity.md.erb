@@ -281,6 +281,8 @@ A main intent of Trailblazer's activities is reusability. As opposed to TRB 1.x,
 
 ## Composition: Nested
 
+***When nesting activities, [all mechanics from `Output`](#activity-output) apply, it's just the output _signal_ that is slightly different.***
+
 ### Automatic Wiring
 
 > The nested activity is a simple Railway with two ends.
@@ -321,7 +323,22 @@ Let's assume the nested, inner activity `Memo::Find` had three ends, with specif
 
 <img src="/images/nested-manual-ends.png">
 
-Now, all ends from the inner activity have a matching end on the outside. This helps to manage the flow better, but is not always necessary. Sometimes, you might want to pool multiple inner ends or redirect them onto a track.
+Now, all ends from the inner activity have a matching end on the outside. This helps to manage the flow better, but is not always necessary.
+
+### Connect to color
+
+> Instead of using `End`, you can also wire a nested output to a color, e.g. the outer `:failure` track.
+
+```ruby
+<%= snippet :activity, "rewire-outer", file: "docs/composition_test.rb" %>
+```
+
+Sometimes, you might want to pool multiple inner ends or redirect them onto a track, instead of maintaining one end on the outside for each inner one. In this example, we redirect the `:id_missing` end to the generic `:failure` track.
+
+<img src="/images/nested-rewire.png">
+
+The `:id_missing` end is now connected to the `:failure` track, which happens to run directly into its end. Keep in mind that you can use all [mechanics from `Output()`](#activity-output) and wire nested ends to just anything.
+
 
 ## End
 
