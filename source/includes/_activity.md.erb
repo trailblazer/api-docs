@@ -267,6 +267,64 @@ SomeModule.method(:find)
 
 ## Task Interface
 
+Memo::Find.outputs[:success]
+Memo::Find.outputs[:failure]
+
+## Composition
+
+A main intent of Trailblazer's activities is reusability. As opposed to TRB 1.x, where inheritance was overused, we now encourage compositions. You have two tools to reuse activities with others and compose more complex workflows.
+
+1. The _Merge API_ allows to "copy" activities or parts of it into others and hence merge them.
+2. You can use _nesting_ to call acitivies from activities and maintain cleanly encapsulated flows.
+
+## Composition: Merge API
+
+## Composition: Nested
+
+### Automatic Wiring
+
+> The nested activity is a simple Railway with two ends.
+
+```ruby
+<%= snippet :activity, "simple-railway", file: "docs/composition_test.rb" %>
+```
+
+> The composer is a Railway as well, and automatically "understands" how to wire the nested's ends.
+
+```ruby
+<%= snippet :activity, "simple-composer", file: "docs/composition_test.rb" %>
+```
+
+Since all activities expose the [_Task interface_](#activity-task-interface), you can nest by simply providing the contained activity as a task.
+
+When the nested activity doesn't have any custom ends, you can provide the `:outputs` option along with the nested's outputs without any need to manually reconnect. The outer Railway (the container) automatically understands how to connect the nested's ends.
+
+<img src="/images/nested-simple-railway.png">
+
+The automatic wiring of the inner activity works by matching semantics and colors: the inner `:success` end get connected to the `:success` path, the `:failure` end to the `:failure` path of the outer Railway.
+
+### Manual wiring
+
+> By adding two custom ends, the inner activity now has four ends.
+
+```ruby
+<%= snippet :activity, "manual-inner", file: "docs/composition_test.rb" %>
+```
+
+> You can grab the nested ends' outputs using `outputs[:semantic]` and wire them to custom connections.
+
+```ruby
+<%= snippet :activity, "manual-outer", file: "docs/composition_test.rb" %>
+```
+
+Let's assume the nested, inner activity `Memo::Find` had three ends, with specific ends to indicate what went wrong, and where (see [End](#activity-end)). These ends have custom semantics `:id_present` and `:model_not_found` and hence can't be connected automatically. You need to manually wire them to other tasks, tracks, or ends.
+
+<img src="/images/nested-manual-ends.png">
+
+Now, all ends from the inner activity have a matching end on the outside. This helps to manage the flow better, but is not always necessary. Sometimes, you might want to pool multiple inner ends or redirect them onto a track.
+
+## End
+
 ## DSL
 
 ## Event
