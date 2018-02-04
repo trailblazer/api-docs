@@ -23,7 +23,7 @@ An activity defines a workflow for a specific business process. This can be any 
 
 Per convention, activities are `module`s and not classes. A module in Ruby is just a namespace and not automatically supposed to be used as a mixin, which we refrain from. Instead, think of an activity module as a `module` in Elixir, which is simply a collection of stateless functions. Modules have two major benefits.
 
-* You can not subclass actitivies. This might sound counter-intuitive, but activity gives you the much more sustainable tool of compositions.
+* You can not subclass actitivies. This might sound counter-intuitive, but activity gives you the much more sustainable tool of [compositions](#activity-composition).
 * Modules provide `module_function` to declare every method as a class method. This makes the module more readable and allows to use `method` to attach a module method to a step.
 
 ### Example
@@ -36,7 +36,15 @@ In the lower part, the actual DSL defines the activity's flow. Check out the ren
 
 <img src="/images/activity-overview.png" >
 
-Each box in this diagram is called a task or step. Each is represented by a callable object you provide. The next outgoing line is determined by checking the result of the task: A task following the _step interface_ returns `trusy` of `falsey` and thus instructs the activity what way to choose from here.
+The following principles apply.
+
+* Each box in this diagram is called a task or step, depending on its interface, but we're not too strict here.
+* Each box - in code - is represented by a callable object you provide (usually that's a `method` as seen to the right, or another nested `Activity`).
+* Depending on the return value of the task code, the next connection is picked.
+* Per default, the `ctx` object is passed through from task to task and allows to write state.
+* An activity stops when hitting an end event.
+
+Activities are incredibly simple, even though the DSL might look very powerful. Don't worry, the DSL code is completely separated from the run-time code, and you only need to understand a handful of concepts such as task- and step interface, outputs, semantics, and colors (also known as _polarizations_) and you will be able to write and maintain more complex workflows easily.
 
 ## Anatomy
 
@@ -157,7 +165,7 @@ The example only works because the DSL automatically assigns outputs if none are
 
 When using `task` or other DSL methods to add a task, depending on the strategy, the DSL will automatically provide default outputs as you see on the right. Since, now, the outputs are provided, the DSL strategy will now automatically connect the outputs to the next task.
 
-For example, with `Path()`, a `:success` step will be wired to the next `task` call. In a `Railway`, the same happens, plus a `:failure` output will be connected to the error track for you.
+For example, with `Path()`, a `:success` output will be wired to the next `task` call. In a `Railway`, the same happens, plus a `:failure` output will be connected to the error track for you.
 
 <!-- @notoc -->
 ## Output: Defaults for Plain Task
@@ -190,7 +198,7 @@ module Memo::Create
   step method(:policy), fast_track: true
 ```
 
-When inserting a task via the DSL, everything works identical to the behavior when [adding `Nested` activities](#activity-output-nested) except for one thing: Since the DSL can't query a callable Ruby object for its outputs, it defaults the outputs as follows.
+When inserting a task via the DSL, everything works identical to the behavior when [adding `Nested` activities](#activity-output-subprocess) except for one thing: Since the DSL can't query a callable Ruby object for its outputs, it defaults the outputs as follows.
 
 In a `Path()`-based activity, the `task` method always adds a `:success` output with a `Right` signal (left diagram).
 
@@ -201,10 +209,10 @@ In a `Railway()` or `FastTrack()` activity, the `step` method adds `:success` an
 Note that adding `:outputs` to a task doesn't mean they will be connected, it's the DSL's job now to wire those to the next task, unless you [specify the connection explicitly](#activity-output-id).
 
 <!-- @notoc -->
-## Output: Nested
+## Output: Subprocess
 
 
-Activities can be nested. This is usually done with the `Nested` macro that will automatically define `:outputs` for the nested activity by querying the latter via its `output` method. `Nested` assumes that the nested activity follows the [activity-interface](#activity-activity-interface).
+Activities can be nested. This is usually done with the [`Subprocess` macro](#activity-composition-subprocess) that will automatically define `:outputs` for the nested activity by querying the latter via its `output` method. `Subprocess` assumes that the nested activity follows the [Activity interface](#activity-activity-interface).
 
 Suppose the following `Update::Model` activity needs to be nested into another activity `Update`.
 
@@ -215,7 +223,7 @@ module Memo::Update
   extend Trailblazer::Activity::Railway()
 
   step method(:policy)
-  step Nested( Update::Model )
+  step Subprocess( Update::Model )
     #=> defaults:
     # outputs: {
     #   success:            Output{<Update::Right>:success},
@@ -269,6 +277,15 @@ SomeModule.method(:find)
 
 Memo::Find.outputs[:success]
 Memo::Find.outputs[:failure]
+
+## Step Interface
+
+## Activity Interface
+
+call
+outputs
+to_h
+
 
 ## Composition
 
@@ -353,6 +370,28 @@ The `activity` gem provides the `Subprocess` macro as a short-cut when nesting a
 
 ## End
 
+> The `End()` helper in combination with `Output()` connects an output with a newly created end.
+
+```ruby
+<%= snippet :activity, "output-end", file: "docs/end_test.rb" %>
+```
+
+Outgoing connections from a task can either go to another task, or to an end event. Every strategy comes with one or more default ends, for example `Railway()` has two ends, respectively one with `:success` and one with `:failure` semantic.
+
+The `End()` helper allows you to quickly connect a particular task to a new end.
+
+This is incredibly helpful if further processing doesn't make sense after this task "failed" (or whatever made you choose hitting the new end), and you want to know "what happened". For instance, a policy breach doesn't need to error out generically, but should end in a separate end with a specific semantic (e.g. `:policy_breach`). When running that activity returns the policy breach end, you know the execution stopped after the policy task.
+
+On the right side, check out how to use `End()` with `Output()`.
+
+<aside class="warning">
+Note that, in order to reference an _existing_ end, you currently have to use an [ID reference](#activity-output-id).
+</aside>
+
+The respective diagram will have three ends.
+
+<img src="/images/end.png">
+
 ## DSL
 
 ## Event
@@ -396,5 +435,3 @@ An extra path can be joined with the outer activity by pointing the last (or any
 <img src="/images/path-join.png" >
 
 Only when `find` returns the `Left` signal, the extra path is taken.
-
-## Activity Interface
