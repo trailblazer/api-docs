@@ -22,18 +22,18 @@ Create a local folder like `~/projects/trailblazer/docs` ( or whatever)
 Where you are going to keep local copies of the gems.
 
 cd into the said directory
-```bash
+```shell
 cd ~/projects/trailblazer/docs
 ```
 
 Clone your api-docs  repo locally.
-```bash
+```shell
 git clone git@github.com:[YOUR GITHUB ACCOUNT NAME]/api-docs
 ```
 
 Set upstream to trailblazer api-docs, so that you can keep in sync with any changes
 
-```bash
+```shell
 git remote add upstream git@github.com:trailblazer/api-docs
 git pull upstream
 ```
@@ -67,7 +67,7 @@ git clone git@github.com:apotonick/torture
 
 
 ### Startup Docs
-```bash
+```shell
 cd api-docs
 bundle install
 bundle exec middleman server
@@ -76,7 +76,7 @@ bundle exec middleman server
 To pull ALL changed for all gems you can use this little snippet.
 You can also alias it to a command in in you **.bash_profile** ( or fish or z config files)
 
-```bash
+```shell
  alias git_pull_all 'find . -type d -name .git -exec sh -c "cd \"{}\"/../ && pwd && git pull " \;'
 ```
 
