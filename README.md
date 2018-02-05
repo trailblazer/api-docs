@@ -40,7 +40,7 @@ git pull upstream
 ### Setup local copies of gems
 This is needed so that docs can compile.  They need to be cloned into the same parent directory
 
-```bash
+```shell
 git clone git@github.com:trailblazer/cells
 git clone git@github.com:trailblazer/formular
 git clone git@github.com:trailblazer/reform
@@ -74,7 +74,7 @@ bundle exec middleman server
 ```
 ### Keeping gems in sync
 To pull ALL changed for all gems you can use this little snippet.
-You can also alias it to a command in in you **.bash_profile** ( or fish or zsh config files)
+You can also alias it to a command in in you **.bash_profile** ( or fish or z config files)
 
 ```bash
  alias git_pull_all 'find . -type d -name .git -exec sh -c "cd \"{}\"/../ && pwd && git pull " \;'
