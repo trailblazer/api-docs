@@ -419,10 +419,51 @@ Events are tasks with special semantics.
 * `Start` events do nothing, and always return the `Right` signal. Every activity begins with one or multiple start events.
 * `End` events usually don't execute anything, either. An end event instance always returns itself as the signal. This allows to wire them to ongoing connections when nesting. End events mark the end of activity paths, and might also be used for suspending an activity as we do [in the `workflow` gem](#workflow).
 
+## Magnetism
+
+## Custom Track
+
+> Use `magnetic_to:` and `Output()` to change the polarizations.
+
+```ruby
+<%= snippet :activity, "custom", file: "docs/railway_test.rb" %>
+```
+
+All builder strategies (`Path`, `Railway`, etc.) provide defaults for outputs and track "colors". These you can override, which allows to easily branch out custom tracks to handle conditionals or to model polymorphic behavior.
+
+***Remember, [with the Magnetic DSL](#magnetism), tracks are a result of polarizing inputs and outputs.***
+
+The `:magnetic_to` option is an array of polarization colors for the task's inputs (also called _minus pole_) and defines what "open" colors the task will "snap to".
+
+With `Output()`, you map outputs to colors, which is what the coming inputs will "snap to". A tuple of an output and a color is called _plus pole_.
+
+--# TODO: diagram
 
 ## Path
 
-### Join
+> The `Path()` helper lets you build a custom track.
+
+```ruby
+<%= snippet :activity, "path", file: "docs/railway_test.rb" %>
+```
+
+Instead of having to pass around the track color of the [custom track](#activity-custom-track), you can use the `Path()` helper to branch out and build an additional linear flow.
+
+--# TODO: diagram
+
+A path will always end in an end event with a `:success` semantic, which is why the last task is explicitly connected via `End()`. This results in a track end where you define the semantic.
+
+### Path: End Semantic
+
+> The `:end_semantic` option allows reusing the default end with a semantic you pick.
+
+```ruby
+<%= snippet :activity, "path-end", file: "docs/railway_test.rb" %>
+```
+
+The `Path()` helper accepts a `:end_semantic` option to assign a custom semantic.
+
+## Join
 
 ```ruby
 <%= snippet :activity, "join", collapse: "methods", file: "docs/path_test.rb" %>
