@@ -437,7 +437,9 @@ The `:magnetic_to` option is an array of polarization colors for the task's inpu
 
 With `Output()`, you map outputs to colors, which is what the coming inputs will "snap to". A tuple of an output and a color is called _plus pole_.
 
---# TODO: diagram
+<img src="/images/custom-track.png">
+
+The resulting circuit has three tracks. We didn't put anything on the `:failure` track, but it is still there. Note that, in a `Railway`, mapping the `:success` output does create the desired plus pole. However, the `:failure` output, per default, is still pointing to the `:failure` track and will result in deviation to it should `auth_err` or `reset_counter` return the `Left` signal.
 
 ## Path
 
@@ -449,11 +451,14 @@ With `Output()`, you map outputs to colors, which is what the coming inputs will
 
 Instead of having to pass around the track color of the [custom track](#activity-custom-track), you can use the `Path()` helper to branch out and build an additional linear flow.
 
---# TODO: diagram
+<img src="/images/custom-track.png">
+
+The circuit looks identical to a [custom track](#activity-custom-track).
 
 A path will always end in an end event with a `:success` semantic, which is why the last task is explicitly connected via `End()`. This results in a track end where you define the semantic.
 
-### Path: End Semantic
+<!-- @notoc -->
+## Path: End Semantic
 
 > The `:end_semantic` option allows reusing the default end with a semantic you pick.
 
@@ -462,6 +467,8 @@ A path will always end in an end event with a `:success` semantic, which is why 
 ```
 
 The `Path()` helper accepts a `:end_semantic` option to assign a custom semantic.
+
+The circuit looks identical to a [custom track](#activity-custom-track).
 
 ## Join
 
