@@ -257,7 +257,16 @@
                     <a href="#activity-event" class="toc-h2 toc-link" data-title="event">Event</a>
                   </li>
                   <li>
+                    <a href="#activity-magnetism" class="toc-h2 toc-link" data-title="magnetism">Magnetism</a>
+                  </li>
+                  <li>
+                    <a href="#activity-custom-track" class="toc-h2 toc-link" data-title="custom-track">Custom Track</a>
+                  </li>
+                  <li>
                     <a href="#activity-path" class="toc-h2 toc-link" data-title="path">Path</a>
+                  </li>
+                  <li>
+                    <a href="#activity-join" class="toc-h2 toc-link" data-title="join">Join</a>
                   </li>
               </ul>
           </li>
@@ -365,7 +374,9 @@
     <div class="page-wrapper">
       <div class="dark-box"></div>
       <div class="content">
-        <h1 id='what-is-trailblazer'>What is Trailblazer?</h1><h1 id='activity'>Activity</h1>
+        <h1 id='what-is-trailblazer'>What is Trailblazer?</h1>
+<p>The idea of 2.1 is: If you can&#39;t draw it, you can&#39;t code it.</p>
+<h1 id='activity'>Activity</h1>
 <p>The activity gem provides the DSL to define workflows, and the runtime objects to execute the latter.</p>
 <h2 id='activity-overview'>Overview</h2><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
@@ -808,7 +819,77 @@ Note that, in order to reference an _existing_ end, you currently have to use an
 <li><code>Start</code> events do nothing, and always return the <code>Right</code> signal. Every activity begins with one or multiple start events.</li>
 <li><code>End</code> events usually don&#39;t execute anything, either. An end event instance always returns itself as the signal. This allows to wire them to ongoing connections when nesting. End events mark the end of activity paths, and might also be used for suspending an activity as we do <a href="#workflow">in the <code>workflow</code> gem</a>.</li>
 </ul>
-<h2 id='activity-path'>Path</h2><h3 id='activity-join'>Join</h3><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Upsert</span>
+<h2 id='activity-magnetism'>Magnetism</h2><h2 id='activity-custom-track'>Custom Track</h2>
+<blockquote>
+<p>Use <code>magnetic_to:</code> and <code>Output()</code> to change the polarizations.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span>  <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:auth_failed</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">),</span>      <span class="ss">magnetic_to: </span><span class="p">[</span><span class="ss">:auth_failed</span><span class="p">],</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:auth_failed</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">),</span> <span class="ss">magnetic_to: </span><span class="p">[</span><span class="ss">:auth_failed</span><span class="p">],</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:authentication_failure</span><span class="p">)</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>All builder strategies (<code>Path</code>, <code>Railway</code>, etc.) provide defaults for outputs and track &quot;colors&quot;. These you can override, which allows to easily branch out custom tracks to handle conditionals or to model polymorphic behavior.</p>
+
+<p><aside class="notice">Remember, <a href="#magnetism">with the Magnetic DSL</a>, tracks are a result of polarizing inputs and outputs.</aside></p>
+
+<p>The <code>:magnetic_to</code> option is an array of polarization colors for the task&#39;s inputs (also called <em>minus pole</em>) and defines what &quot;open&quot; colors the task will &quot;snap to&quot;.</p>
+
+<p>With <code>Output()</code>, you map outputs to colors, which is what the coming inputs will &quot;snap to&quot;. A tuple of an output and a color is called <em>plus pole</em>.</p>
+
+<p><img src="images/custom-track.png"></p>
+
+<p>The resulting circuit has three tracks. We didn&#39;t put anything on the <code>:failure</code> track, but it is still there. Note that, in a <code>Railway</code>, mapping the <code>:success</code> output does create the desired plus pole. However, the <code>:failure</code> output, per default, is still pointing to the <code>:failure</code> track and will result in deviation to it should <code>auth_err</code> or <code>reset_counter</code> return the <code>Left</code> signal.</p>
+<h2 id='activity-path'>Path</h2>
+<blockquote>
+<p>The <code>Path()</code> helper lets you build a custom track.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Path</span><span class="p">()</span> <span class="k">do</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">)</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:authentication_failure</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>Instead of having to pass around the track color of the <a href="#activity-custom-track">custom track</a>, you can use the <code>Path()</code> helper to branch out and build an additional linear flow.</p>
+
+<p><img src="images/custom-track.png"></p>
+
+<p>The circuit looks identical to a <a href="#activity-custom-track">custom track</a>.</p>
+
+<p>A path will always end in an end event with a <code>:success</code> semantic, which is why the last task is explicitly connected via <code>End()</code>. This results in a track end where you define the semantic.</p>
+
+<!-- @notoc -->
+<h2 id='activity-path-end-semantic'>Path: End Semantic</h2>
+<blockquote>
+<p>The <code>:end_semantic</code> option allows reusing the default end with a semantic you pick.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Path</span><span class="p">(</span> <span class="ss">end_semantic: :authentication_failure</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">)</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>The <code>Path()</code> helper accepts a <code>:end_semantic</code> option to assign a custom semantic.</p>
+
+<p>The circuit looks identical to a <a href="#activity-custom-track">custom track</a>.</p>
+<h2 id='activity-join'>Join</h2><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Upsert</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Path</span><span class="p">()</span>
   <span class="c1"># ...</span>
 
