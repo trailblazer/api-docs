@@ -322,8 +322,6 @@ A main intent of Trailblazer's activities is reusability. As opposed to TRB 1.x,
 1. The _Merge API_ allows to "copy" activities or parts of it into others and hence merge them.
 2. You can use _nesting_ to call acitivies from activities and maintain cleanly encapsulated flows.
 
-## Composition: Merge API
-
 ## Composition: Subprocess
 
 To model more complex activities and maximize reusability, a task can be an activity itself. This is called _nesting_, in BPMN, a nested activity is called _Subprocess_.
@@ -395,6 +393,40 @@ The `:id_missing` end is now connected to the `:failure` track, which happens to
 ```
 
 The `activity` gem provides the `Subprocess` macro as a short-cut when nesting activities. It will produce an identical circuit as the one above by automatically extracting and passing `:outputs` to the DSL. You may then [use `Output()` to reference outputs](#activity-output) in a more convenient way, and without having to connect automatically matched ones.
+
+## Composition: Merge API
+
+> Use `merge!` to include an existing activity.
+
+```ruby
+<%= snippet :activity, "merge", file: "docs/merge_test.rb" %>
+```
+
+Instead of modelling the `Update` activity as a real composition where a part of the implementation sits in a physically separated component and is [delegated to via nesting](#activity-composition-subprocess), you can also copy the "implementation" directly into the composing activity. This will merge the steps into the activity. In many cases, this is a fair solution that simplifies the flow.
+
+<img src="/images/merge.png">
+
+The merged activity will be embedded where you call `merge!`, as if you had copied its DSL calls to that position.
+
+> Merged activities can contain any DSL directive.
+
+```ruby
+<%= snippet :activity, "logger", file: "docs/merge_test.rb" %>
+```
+
+> `merge!` can be used to include template activities, too.
+
+```ruby
+<%= snippet :activity, "merge-two", file: "docs/merge_test.rb" %>
+```
+
+You can use `merge!` multiple times. Note that example, the merged activity `Lib::Logger` contains `pass` and `fail` directives along with DSL options to position the tasks. If positional options are given, it doesn't matter where the `merge!` is called in the composing activity.
+
+<img src="/images/merge-two.png">
+
+This allows modeling more complex activities by composing them from multiple entities without overcomplicating the control flow by nesting them.
+
+***In 2.1, you can finally implement "template activities" that define base steps that should be present in many activities at defined positions. Simply `merge!` them where needed.***
 
 ## End
 
