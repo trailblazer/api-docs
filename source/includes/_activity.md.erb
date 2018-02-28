@@ -267,17 +267,29 @@ You now have two outputs going to the same next step, which is actually fine in 
 <%= snippet :activity, "id-ref", collapse: "methods", file: "docs/id_test.rb" %>
 ```
 
-If a task needs to be connected to another specific task, you can reference the target using its id, resulting in something like `Output(:semantic) => :id_of_target`. Note that the ID can be anything, but it has to be assigned on the target task.
+If a task needs to be connected to another specific task, you can reference the target using its ID, which will look like `Output(:semantic) => :id_of_target`. Note that the ID can be anything, but it has to be assigned on the target task.
 
 <img src="/images/id-ref.png" >
 
 In this example, if a sign in request can't be handled via Omniauth (because the user didn't attempt to sign in via Github or Facebook), the submitted email is searched, instead. If that was successful, the user is signed in.
 
-***In operations, IDs are usually assigned automatically.***
-
+***In operations, IDs are assigned automatically.***
 
 <!-- @notoc -->
-## Output: Color
+## Output: Track
+
+> Use the `Track()` helper to reference a track.
+
+```ruby
+<%= snippet :activity, "track-ref", collapse: "methods", file: "docs/track_test.rb" %>
+```
+
+Connecting tasks specifically to other tasks [via IDs](#activity-output-id) is the right choice if you "know" what will be the next step. However, often, you don't want to hard-wire steps to each other but place them on tracks, and let the activity take care of connecting the tasks in the right order.
+
+<img src="/images/id-ref.png" >
+
+Here, the `find_by_email` task will have a `:success` output that will snap towards the next open `:success` input, which happens to be the input of `sign_in` (since the latter is placed _after_).
+
 <!-- @notoc -->
 ## Output: End
 
