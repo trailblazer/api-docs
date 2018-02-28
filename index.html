@@ -632,7 +632,7 @@
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
 
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
-  <span class="n">step</span> <span class="no">Nested</span><span class="p">(</span> <span class="no">Update</span><span class="o">::</span><span class="no">Model</span> <span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure_validation</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:failure</span>
+  <span class="n">step</span> <span class="no">Nested</span><span class="p">(</span> <span class="no">Update</span><span class="o">::</span><span class="no">Model</span> <span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure_validation</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span>
 <span class="k">end</span>
 </code></pre>
 <p>The <code>Railway()</code> strategy will now automatically connect outputs with semantics it knows. Note that the <code>failure.validation</code> output can&#39;t be auto-connected since the semantic is unknown.</p>
@@ -649,6 +649,27 @@
 <h2 id='activity-output-output-option'>Output: Output option</h2>
 <!-- @notoc -->
 <h2 id='activity-output-id'>Output: Id</h2>
+<blockquote>
+<p>Use an <code>:id</code> to reference a particular task.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">User::Signin</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_by_omniauth</span><span class="p">)</span>
+  <span class="nb">fail</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_by_email</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:sign_in</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:sign_in</span><span class="p">),</span> <span class="ss">id: :sign_in</span>
+  <span class="nb">fail</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:create</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>If a task needs to be connected to another specific task, you can reference the target using its id, resulting in something like <code>Output(:semantic) =&gt; :id_of_target</code>. Note that the ID can be anything, but it has to be assigned on the target task.</p>
+
+<p><img src="images/id-ref.png" ></p>
+
+<p>In this example, if a sign in request can&#39;t be handled via Omniauth (because the user didn&#39;t attempt to sign in via Github or Facebook), the submitted email is searched, instead. If that was successful, the user is signed in.</p>
+
+<p><aside class="notice">In operations, IDs are usually assigned automatically.</aside></p>
+
 <!-- @notoc -->
 <h2 id='activity-output-color'>Output: Color</h2>
 <!-- @notoc -->
@@ -722,7 +743,7 @@ to_h</p>
   <span class="c1"># ...</span>
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
   <span class="n">step</span> <span class="ss">task: </span><span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">,</span>
-    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:success</span><span class="p">]</span>         <span class="o">=&gt;</span> <span class="ss">:success</span><span class="p">,</span>
+    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:success</span><span class="p">]</span>         <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:success</span><span class="p">),</span>
     <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:model_not_found</span><span class="p">]</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:err404</span><span class="p">),</span>
     <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:id_missing</span><span class="p">]</span>      <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:id_missing</span><span class="p">)</span>
 <span class="k">end</span>
@@ -742,9 +763,9 @@ to_h</p>
   <span class="c1"># ...</span>
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
   <span class="n">step</span> <span class="ss">task: </span><span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">,</span>
-    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:success</span><span class="p">]</span>         <span class="o">=&gt;</span> <span class="ss">:success</span><span class="p">,</span>
+    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:success</span><span class="p">]</span>         <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:success</span><span class="p">),</span>
     <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:model_not_found</span><span class="p">]</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:err404</span><span class="p">),</span>
-    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:id_missing</span><span class="p">]</span>      <span class="o">=&gt;</span> <span class="ss">:failure</span>
+    <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">.</span><span class="nf">outputs</span><span class="p">[</span><span class="ss">:id_missing</span><span class="p">]</span>      <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span>
 <span class="k">end</span>
 
 </code></pre>
@@ -763,7 +784,7 @@ to_h</p>
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
   <span class="n">step</span> <span class="no">Subprocess</span><span class="p">(</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Find</span> <span class="p">),</span>
     <span class="no">Output</span><span class="p">(</span><span class="ss">:model_not_found</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:err404</span><span class="p">),</span>
-    <span class="no">Output</span><span class="p">(</span><span class="ss">:id_missing</span><span class="p">)</span>      <span class="o">=&gt;</span> <span class="ss">:failure</span>
+    <span class="no">Output</span><span class="p">(</span><span class="ss">:id_missing</span><span class="p">)</span>      <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span>
 <span class="k">end</span>
 
 </code></pre>
@@ -789,9 +810,7 @@ to_h</p>
 
 <p>On the right side, check out how to use <code>End()</code> with <code>Output()</code>.</p>
 
-<aside class="warning">
-Note that, in order to reference an _existing_ end, you currently have to use an [ID reference](#activity-output-id).
-</aside>
+<p><aside class="warning">!Note that, in order to reference an <em>existing</em> end, you currently have to use an <a href="#activity-output-id">ID reference</a>.</aside></p>
 
 <p>The respective diagram will have three ends.</p>
 
@@ -826,8 +845,8 @@ Note that, in order to reference an _existing_ end, you currently have to use an
 <pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
   <span class="c1"># ...</span>
-  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span>  <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:auth_failed</span>
-  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">),</span>      <span class="ss">magnetic_to: </span><span class="p">[</span><span class="ss">:auth_failed</span><span class="p">],</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:auth_failed</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span>  <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:auth_failed</span><span class="p">)</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">),</span>      <span class="ss">magnetic_to: </span><span class="p">[</span><span class="ss">:auth_failed</span><span class="p">],</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:auth_failed</span><span class="p">)</span>
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">),</span> <span class="ss">magnetic_to: </span><span class="p">[</span><span class="ss">:auth_failed</span><span class="p">],</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:authentication_failure</span><span class="p">)</span>
 
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">)</span>
@@ -877,9 +896,9 @@ Note that, in order to reference an _existing_ end, you currently have to use an
 <pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
   <span class="c1"># ...</span>
-  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Path</span><span class="p">(</span> <span class="ss">end_semantic: :authentication_failure</span><span class="p">)</span> <span class="k">do</span>
-    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">)</span>
-    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">)</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Path</span><span class="p">(</span> <span class="ss">end_semantic: :authentication_failure</span> <span class="p">)</span> <span class="k">do</span>
+    <span class="n">pass</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">)</span>
+    <span class="n">pass</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">)</span>
   <span class="k">end</span>
 
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">)</span>
@@ -906,6 +925,8 @@ Note that, in order to reference an _existing_ end, you currently have to use an
 <p><img src="images/path-join.png" ></p>
 
 <p>Only when <code>find</code> returns the <code>Left</code> signal, the extra path is taken.</p>
+
+<p>See also: <a href="#activity-output-id">Output: ID</a></p>
 <h1 id='operation'>Operation</h1>
 <blockquote>
 <p>Example for an operation that doesn&#39;t use any TRB macros. It creates a fresh <code>Memo</code> instance.</p>
