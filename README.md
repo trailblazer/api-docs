@@ -80,6 +80,12 @@ You can also alias it to a command in in you **.bash_profile** ( or fish or z co
  alias git_pull_all 'find . -type d -name .git -exec sh -c "cd \"{}\"/../ && pwd && git pull " \;'
 ```
 
+## Troubleshooting
+
+```
+ofile=/proc/sys/fs/inotify/max_user_instances
+sudo sh -c "echo 8192 > $ofile"
+```
 
 
 <p align="center">
