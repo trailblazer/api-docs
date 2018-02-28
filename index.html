@@ -245,10 +245,10 @@
                     <a href="#activity-composition" class="toc-h2 toc-link" data-title="composition">Composition</a>
                   </li>
                   <li>
-                    <a href="#activity-composition-merge-api" class="toc-h2 toc-link" data-title="composition-merge-api">Composition: Merge API</a>
+                    <a href="#activity-composition-subprocess" class="toc-h2 toc-link" data-title="composition-subprocess">Composition: Subprocess</a>
                   </li>
                   <li>
-                    <a href="#activity-composition-subprocess" class="toc-h2 toc-link" data-title="composition-subprocess">Composition: Subprocess</a>
+                    <a href="#activity-composition-merge-api" class="toc-h2 toc-link" data-title="composition-merge-api">Composition: Merge API</a>
                   </li>
                   <li>
                     <a href="#activity-end" class="toc-h2 toc-link" data-title="end">End</a>
@@ -708,7 +708,7 @@ to_h</p>
 <li>The <em>Merge API</em> allows to &quot;copy&quot; activities or parts of it into others and hence merge them.</li>
 <li>You can use <em>nesting</em> to call acitivies from activities and maintain cleanly encapsulated flows.</li>
 </ol>
-<h2 id='activity-composition-merge-api'>Composition: Merge API</h2><h2 id='activity-composition-subprocess'>Composition: Subprocess</h2>
+<h2 id='activity-composition-subprocess'>Composition: Subprocess</h2>
 <p>To model more complex activities and maximize reusability, a task can be an activity itself. This is called <em>nesting</em>, in BPMN, a nested activity is called <em>Subprocess</em>.</p>
 
 <p><aside class="notice">When nesting activities, <a href="#activity-output">all mechanics from <code>Output</code></a> apply, it&#39;s just the output <em>signal</em> that is slightly different.</aside></p>
@@ -808,6 +808,59 @@ to_h</p>
 
 </code></pre>
 <p>The <code>activity</code> gem provides the <code>Subprocess</code> macro as a short-cut when nesting activities. It will produce an identical circuit as the one above by automatically extracting and passing <code>:outputs</code> to the DSL. You may then <a href="#activity-output">use <code>Output()</code> to reference outputs</a> in a more convenient way, and without having to connect automatically matched ones.</p>
+<h2 id='activity-composition-merge-api'>Composition: Merge API</h2>
+<blockquote>
+<p>Use <code>merge!</code> to include an existing activity.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
+
+  <span class="n">merge!</span><span class="p">(</span><span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">)</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:update</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>Instead of modelling the <code>Update</code> activity as a real composition where a part of the implementation sits in a physically separated component and is <a href="#activity-composition-subprocess">delegated to via nesting</a>, you can also copy the &quot;implementation&quot; directly into the composing activity. This will merge the steps into the activity. In many cases, this is a fair solution that simplifies the flow.</p>
+
+<p><img src="images/merge.png"></p>
+
+<p>The merged activity will be embedded where you call <code>merge!</code>, as if you had copied its DSL calls to that position.</p>
+
+<blockquote>
+<p>Merged activities can contain any DSL directive.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Lib::Logger</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="nb">fail</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:log_error</span><span class="p">),</span>   <span class="ss">group: :end</span><span class="p">,</span> <span class="ss">before: </span><span class="s2">"End.failure"</span> <span class="c1"># always as last.</span>
+  <span class="n">pass</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:log_success</span><span class="p">),</span> <span class="ss">group: :end</span><span class="p">,</span> <span class="ss">before: </span><span class="s2">"End.success"</span> <span class="c1"># always as last.</span>
+<span class="k">end</span>
+
+</code></pre>
+<blockquote>
+<p><code>merge!</code> can be used to include template activities, too.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Update</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">merge!</span> <span class="no">Lib</span><span class="o">::</span><span class="no">Logger</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:policy</span><span class="p">)</span>
+
+  <span class="n">merge!</span><span class="p">(</span><span class="no">Memo</span><span class="o">::</span><span class="no">Find</span><span class="p">)</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:update</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>You can use <code>merge!</code> multiple times. Note that example, the merged activity <code>Lib::Logger</code> contains <code>pass</code> and <code>fail</code> directives along with DSL options to position the tasks. If positional options are given, it doesn&#39;t matter where the <code>merge!</code> is called in the composing activity.</p>
+
+<p><img src="images/merge-two.png"></p>
+
+<p>This allows modeling more complex activities by composing them from multiple entities without overcomplicating the control flow by nesting them.</p>
+
+<p><aside class="notice">In 2.1, you can finally implement &quot;template activities&quot; that define base steps that should be present in many activities at defined positions. Simply <code>merge!</code> them where needed.</aside></p>
 <h2 id='activity-end'>End</h2>
 <blockquote>
 <p>The <code>End()</code> helper in combination with <code>Output()</code> connects an output with a newly created end.</p>
