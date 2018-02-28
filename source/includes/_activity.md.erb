@@ -240,7 +240,7 @@ module Memo::Update
   extend Trailblazer::Activity::Railway()
 
   step method(:policy)
-  step Nested( Update::Model ), Output(:failure_validation) => :failure
+  step Nested( Update::Model ), Output(:failure_validation) => Track(:failure)
 end
 ```
 
