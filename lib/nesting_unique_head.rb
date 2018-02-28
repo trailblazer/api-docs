@@ -24,9 +24,8 @@ class NestingUniqueHeadCounter < Middleman::Renderers::MiddlemanRedcarpetHTML
     return "<h#{header_level} id='#{friendly_text}'>#{text}</h#{header_level}>"
   end
 
-
-
   def triple_emphasis(text)
-    %{<aside class="notice">#{text}</aside>}
+    css_class = text[0] == "!" ? "warning" : "notice"
+    %{<aside class="#{css_class}">#{text}</aside>}
   end
 end
