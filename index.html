@@ -662,16 +662,35 @@
 <span class="k">end</span>
 
 </code></pre>
-<p>If a task needs to be connected to another specific task, you can reference the target using its id, resulting in something like <code>Output(:semantic) =&gt; :id_of_target</code>. Note that the ID can be anything, but it has to be assigned on the target task.</p>
+<p>If a task needs to be connected to another specific task, you can reference the target using its ID, which will look like <code>Output(:semantic) =&gt; :id_of_target</code>. Note that the ID can be anything, but it has to be assigned on the target task.</p>
 
 <p><img src="images/id-ref.png" ></p>
 
 <p>In this example, if a sign in request can&#39;t be handled via Omniauth (because the user didn&#39;t attempt to sign in via Github or Facebook), the submitted email is searched, instead. If that was successful, the user is signed in.</p>
 
-<p><aside class="notice">In operations, IDs are usually assigned automatically.</aside></p>
+<p><aside class="notice">In operations, IDs are assigned automatically.</aside></p>
 
 <!-- @notoc -->
-<h2 id='activity-output-color'>Output: Color</h2>
+<h2 id='activity-output-track'>Output: Track</h2>
+<blockquote>
+<p>Use the <code>Track()</code> helper to reference a track.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">User::Signin</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_by_omniauth</span><span class="p">)</span>
+  <span class="nb">fail</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_by_email</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:sign_in</span><span class="p">)</span>
+  <span class="nb">fail</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:create</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>Connecting tasks specifically to other tasks <a href="#activity-output-id">via IDs</a> is the right choice if you &quot;know&quot; what will be the next step. However, often, you don&#39;t want to hard-wire steps to each other but place them on tracks, and let the activity take care of connecting the tasks in the right order.</p>
+
+<p><img src="images/id-ref.png" ></p>
+
+<p>Here, the <code>find_by_email</code> task will have a <code>:success</code> output that will snap towards the next open <code>:success</code> input, which happens to be the input of <code>sign_in</code> (since the latter is placed <em>after</em>).</p>
+
 <!-- @notoc -->
 <h2 id='activity-output-end'>Output: End</h2><h3 id='activity-definition'>Definition</h3>
 <p>SomeModule.method(:find)</p>
