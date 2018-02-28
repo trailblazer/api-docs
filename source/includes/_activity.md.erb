@@ -260,6 +260,22 @@ You now have two outputs going to the same next step, which is actually fine in 
 
 <!-- @notoc -->
 ## Output: Id
+
+> Use an `:id` to reference a particular task.
+
+```ruby
+<%= snippet :activity, "id-ref", collapse: "methods", file: "docs/id_test.rb" %>
+```
+
+If a task needs to be connected to another specific task, you can reference the target using its id, resulting in something like `Output(:semantic) => :id_of_target`. Note that the ID can be anything, but it has to be assigned on the target task.
+
+<img src="/images/id-ref.png" >
+
+In this example, if a sign in request can't be handled via Omniauth (because the user didn't attempt to sign in via Github or Facebook), the submitted email is searched, instead. If that was successful, the user is signed in.
+
+***In operations, IDs are usually assigned automatically.***
+
+
 <!-- @notoc -->
 ## Output: Color
 <!-- @notoc -->
@@ -479,3 +495,5 @@ An extra path can be joined with the outer activity by pointing the last (or any
 <img src="/images/path-join.png" >
 
 Only when `find` returns the `Left` signal, the extra path is taken.
+
+See also: [Output: ID](#activity-output-id)
