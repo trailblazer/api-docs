@@ -5,40 +5,31 @@ class NestingUniqueHeadCounter < Middleman::Renderers::MiddlemanRedcarpetHTML
   def initialize
     super
 
-    @headers = {}
-
+    # @headers = {}
+    # Fuck, this filter is instantiated per physical template, this sucks.
     @@headers_history = {} if !defined?(@@headers_history)
   end
 
   def header(text, header_level)
+    @@headers_history[header_level]          = text # this is such bad programming.
     anchor = text.parameterize
-    @@headers_history[header_level] = text.parameterize
-    @headers[header_level]          = text # this is such bad programming.
 
-    # pp @@headers_history
     if header_level > 1
-      # always have two levels, only: operation-call, instead of operation-api-call
-
-      anchor = [ @@headers_history[1], anchor ].join("-")
-      # for i in (header_level - 1).downto(1)
-        # anchor.prepend("#{@@headers_history[0]}-") if @@headers_history.key?(0)
-      # end
+      # let's assume @headers is sorting 1,2,3,4.
+      segments = @@headers_history.values[0..header_level-1]
+      anchor   = segments.collect { |header| header.parameterize }.join("-")
     end
 
-    # pp @@headers_history
     # {1=>"activity",
     #  2=>"path",
     #  3=>"subprocess",
     #  4=>"composition-subprocess-automatic-wiring"}
 
- # pp @headers
-    path = @headers
+    path       = @@headers_history
 
     breadcrumb = ""
     breadcrumb = %{<div><span>#{path[2]} /</span> #{path[3]}</div>} if header_level == 4
     breadcrumb = %{<div><span>#{path[2]}</span></div>}              if header_level == 3
-
-
 
     return %{<h#{header_level} id="#{anchor}">
   #{breadcrumb}
