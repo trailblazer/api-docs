@@ -640,3 +640,7 @@ html, body {
 .highlight, .highlight .w {
   background-color: $code-bg;
 }
+
+.content a.anchorjs-link {
+  color: $nav-active-bg;
+}
