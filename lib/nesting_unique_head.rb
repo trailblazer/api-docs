@@ -8,16 +8,16 @@ class NestingUniqueHeadCounter < Middleman::Renderers::MiddlemanRedcarpetHTML
   end
 
   def header(text, header_level)
-    friendly_text = text.parameterize
+    anchor = text.parameterize
     @@headers_history[header_level] = text.parameterize
 
     # pp @@headers_history
     if header_level > 1
       # always have two levels, only: operation-call, instead of operation-api-call
 
-      friendly_text = [ @@headers_history[1], friendly_text ].join("-")
+      anchor = [ @@headers_history[1], anchor ].join("-")
       # for i in (header_level - 1).downto(1)
-        # friendly_text.prepend("#{@@headers_history[0]}-") if @@headers_history.key?(0)
+        # anchor.prepend("#{@@headers_history[0]}-") if @@headers_history.key?(0)
       # end
     end
 
@@ -27,7 +27,18 @@ class NestingUniqueHeadCounter < Middleman::Renderers::MiddlemanRedcarpetHTML
     #  3=>"subprocess",
     #  4=>"composition-subprocess-automatic-wiring"}
 
-    return "<h#{header_level} id='#{friendly_text}'>#{text}</h#{header_level}>"
+    path = @@headers_history.values
+
+    breadcrumb = ""
+    breadcrumb = %{<div><span>#{path[1]} /</span> #{path[2]}</div>} if header_level == 4
+    breadcrumb = %{<div><span>#{path[1]}</span></div>} if header_level == 3
+
+
+
+    return %{<h#{header_level} id="#{anchor}">
+  #{breadcrumb}
+  #{text}
+</h#{header_level}>}
   end
 
   def triple_emphasis(text)

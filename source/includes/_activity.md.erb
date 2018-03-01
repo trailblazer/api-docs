@@ -322,18 +322,13 @@ A main intent of Trailblazer's activities is reusability. As opposed to TRB 1.x,
 1. The _Merge API_ allows to "copy" activities or parts of it into others and hence merge them.
 2. You can use _nesting_ to call acitivies from activities and maintain cleanly encapsulated flows.
 
-### Composition: Subprocess
+### Subprocess
 
 To model more complex activities and maximize reusability, a task can be an activity itself. This is called _nesting_, in BPMN, a nested activity is called _Subprocess_.
 
 ***When nesting activities, [all mechanics from `Output`](#activity-output) apply, it's just the output _signal_ that is slightly different.***
 
-<h4>
-  <div><span>Composition /</span> Subprocess</div>
-  Automatic Wiring
-</h4>
-
-#### Composition / Subprocess / Automatic Wiring
+#### Automatic Wiring
 
 > The nested activity is a simple Railway with two ends.
 
@@ -355,7 +350,7 @@ When the nested activity doesn't have any custom ends, you can provide the `:out
 
 The automatic wiring of the inner activity works by matching semantics and colors: the inner `:success` end get connected to the `:success` path, the `:failure` end to the `:failure` path of the outer Railway.
 
-### Manual wiring
+#### Manual wiring
 
 > By adding two custom ends, the inner activity now has four ends.
 
@@ -375,7 +370,7 @@ Let's assume the nested, inner activity `Memo::Find` had three ends, with specif
 
 Now, all ends from the inner activity have a matching end on the outside. This helps to manage the flow better, but is not always necessary.
 
-### Connect to color
+#### Connect to color
 
 > Instead of using `End`, you can also wire a nested output to a color, e.g. the outer `:failure` track.
 
@@ -389,7 +384,7 @@ Sometimes, you might want to pool multiple inner ends or redirect them onto a tr
 
 The `:id_missing` end is now connected to the `:failure` track, which happens to run directly into its end. Keep in mind that you can use all [mechanics from `Output()`](#activity-output) and wire nested ends to just anything.
 
-### Subprocess
+#### Subprocess Macro
 
 > Use the `Subprocess()` macro if you want to save typing and take advantage of `Output()`.
 
@@ -399,7 +394,7 @@ The `:id_missing` end is now connected to the `:failure` track, which happens to
 
 The `activity` gem provides the `Subprocess` macro as a short-cut when nesting activities. It will produce an identical circuit as the one above by automatically extracting and passing `:outputs` to the DSL. You may then [use `Output()` to reference outputs](#activity-output) in a more convenient way, and without having to connect automatically matched ones.
 
-## Composition: Merge API
+### Merge API
 
 > Use `merge!` to include an existing activity.
 
@@ -412,6 +407,8 @@ Instead of modelling the `Update` activity as a real composition (with two separ
 <img src="/images/merge.png">
 
 The merged activity will be embedded where you call `merge!`, as if you had copied its DSL calls to that position.
+
+#### Templates
 
 > Merged activities can contain any DSL directive.
 
