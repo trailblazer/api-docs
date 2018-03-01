@@ -1,0 +1,232 @@
+## Wiring API
+
+### Output
+
+
+The entire DSL is only about outputs, or about connecting outputs to tasks, to be more accurate. That's why we spend a lot of time working out the best way to model activities.
+
+<!-- @nutshell -->
+***An output is mostly represented by a circle sitting on the box's edge. It is defined as a tuple of signal along with a semantic. We often write outputs in diagrams like `<Signal>:semantic`. The task's Ruby code can pick what output to take by returning the specific signal.***
+
+Sometimes, we omit the circle and just annotate the outgoing arrow with the signal tuple.
+
+> A task can return any signal with the task interface.
+ The signal dictates which physical output to take.
+
+```ruby
+def policy( (ctx, flow_options), **)
+  signal = ctx[:current_user].nil? ?
+    Trailblazer::Activity::Left :
+    Trailblazer::Activity::Right
+
+  return signal, [ctx, flow_options]
+end
+```
+
+> The DSL automatically assigns default outputs if none are specified.
+
+```ruby
+module Memo::Create
+  extend Trailblazer::Activity::Railway() # we're using the Railsway here
+
+  step method(:policy)
+  #=> defaults:
+  # outputs: {
+  #   success: Output{<Right>:success},
+  #   failure: Output{<Left>:failure}
+  # }
+end
+```
+
+<img src="/images/output-versions.png" >
+
+On the right-hand side, you see a `policy` task that returns either a `Right` or a `Left` signal. Remember, tasks can return just anything as a signal. Since for callable Ruby objects (which is what tasks are), there's no way to define what outputs a task comes with, it's the DSL's job to define a set of outputs of a specific task.
+
+The example only works because the DSL automatically assigns outputs if none are given.
+
+When using `task` or other DSL methods to add a task, depending on the strategy, the DSL will automatically provide default outputs as you see on the right. Since, now, the outputs are provided, the DSL strategy will now automatically connect the outputs to the next task.
+
+For example, with `Path()`, a `:success` output will be wired to the next `task` call. In a `Railway`, the same happens, plus a `:failure` output will be connected to the error track for you.
+
+<!-- @notoc -->
+#### Defaults for Plain Task
+
+> With `Path()`, the `task` method defaults `:outputs` to one `:success` output (left diagram).
+
+```ruby
+module Memo::Create
+  extend Trailblazer::Activity::Path()
+
+  task method(:policy) #, outputs: { success: Output{<Right>:success} }
+end
+```
+
+> With `Railway()`, the default outputs will be `Right` and `Left` (middle diagram).
+
+```ruby
+module Memo::Create
+  extend Trailblazer::Activity::Railway() # we're using the Railsway here
+
+  step method(:policy)
+```
+
+> With `FastTrack()` and the `fast_track: true` options, default outputs will be `Right`, `Left`, `PassFast` and `FailFast` (right diagram). This gives you four possible default outputs.
+
+```ruby
+module Memo::Create
+  extend Trailblazer::Activity::FastTrack() # we're using the Railsway here
+
+  step method(:policy), fast_track: true
+```
+
+When inserting a task via the DSL, everything works identical to the behavior when [adding `Nested` activities](#activity-output-subprocess) except for one thing: Since the DSL can't query a callable Ruby object for its outputs, it defaults the outputs as follows.
+
+In a `Path()`-based activity, the `task` method always adds a `:success` output with a `Right` signal (left diagram).
+
+<img src="/images/output-task.png" >
+
+In a `Railway()` or `FastTrack()` activity, the `step` method adds `:success` and `:failure`. The latter emitting a `Left` signal (middle diagram). With `FastTrack` and the `:fast_track` option, you get up to four outputs predefined (right diagram).
+
+Note that adding `:outputs` to a task doesn't mean they will be connected, it's the DSL's job now to wire those to the next task, unless you [specify the connection explicitly](#activity-output-id).
+
+#### Subprocess
+
+
+Activities can be nested. This is usually done with the [`Subprocess` macro](#activity-composition-subprocess) that will automatically define `:outputs` for the nested activity by querying the latter via its `output` method. `Subprocess` assumes that the nested activity follows the [Activity interface](#activity-activity-interface).
+
+Suppose the following `Update::Model` activity needs to be nested into another activity `Update`.
+
+<img src="/images/activity-overview.png" >
+
+```ruby
+module Memo::Update
+  extend Trailblazer::Activity::Railway()
+
+  step method(:policy)
+  step Subprocess( Update::Model )
+    #=> defaults:
+    # outputs: {
+    #   success:            Output{<Update::Right>:success},
+    #   failure:            Output{<Update::Left>:failure},
+    #   failure_validation: Output{<Update::ValidationErr>:failure_validation},
+    # }
+end
+```
+
+> Non-standard semantics can be re-routed manually.
+
+```ruby
+module Memo::Update
+  extend Trailblazer::Activity::Railway()
+
+  step method(:policy)
+  step Nested( Update::Model ), Output(:failure_validation) => Track(:failure)
+end
+```
+
+
+The `Railway()` strategy will now automatically connect outputs with semantics it knows. Note that the `failure.validation` output can't be auto-connected since the semantic is unknown.
+
+<img src="/images/nested-open.png" >
+
+You need to specify that connection manually using `Output(:failure_validation)`. In the example to the right, we let the DSL take care of wiring this output to a specific task, and just say "connect `Update`'s validation failure output to the failure track".
+
+<img src="/images/nested-connected-color.png" >
+
+You now have two outputs going to the same next step, which is actually fine in both BPMN and Trailblazer. It's possible to [rewire by color](#activity-output-color), to a [specific next task]((#activity-output-id)), or to an [existing or new end](#activity-output-end).
+
+#### Output option
+
+#### Id
+
+> Use an `:id` to reference a particular task.
+
+```ruby
+<%= snippet :activity, "id-ref", collapse: "methods", file: "docs/id_test.rb" %>
+```
+
+If a task needs to be connected to another specific task, you can reference the target using its ID, which will look like `Output(:semantic) => :id_of_target`. Note that the ID can be anything, but it has to be assigned on the target task.
+
+<img src="/images/id-ref.png" >
+
+In this example, if a sign in request can't be handled via Omniauth (because the user didn't attempt to sign in via Github or Facebook), the submitted email is searched, instead. If that was successful, the user is signed in.
+
+***In operations, IDs are assigned automatically.***
+
+#### Track
+
+> Use the `Track()` helper to reference a track.
+
+```ruby
+<%= snippet :activity, "track-ref", collapse: "methods", file: "docs/track_test.rb" %>
+```
+
+Connecting tasks specifically to other tasks [via IDs](#activity-output-id) is the right choice if you "know" what will be the next step. However, often, you don't want to hard-wire steps to each other but place them on tracks, and let the activity take care of connecting the tasks in the right order.
+
+<img src="/images/id-ref.png" >
+
+Here, the `find_by_email` task will have a `:success` output that will snap towards the next open `:success` input, which happens to be the input of `sign_in` (since the latter is placed _after_).
+
+#### End
+
+### Custom Track
+
+> Use `magnetic_to:` and `Output()` to change the polarizations.
+
+```ruby
+<%= snippet :activity, "custom", file: "docs/railway_test.rb" %>
+```
+
+All builder strategies (`Path`, `Railway`, etc.) provide defaults for outputs and track "colors". These you can override, which allows to easily branch out custom tracks to handle conditionals or to model polymorphic behavior.
+
+***Remember, [with the Magnetic DSL](#magnetism), tracks are a result of polarizing inputs and outputs.***
+
+The `:magnetic_to` option is an array of polarization colors for the task's inputs (also called _minus pole_) and defines what "open" colors the task will "snap to".
+
+With `Output()`, you map outputs to colors, which is what the coming inputs will "snap to". A tuple of an output and a color is called _plus pole_.
+
+<img src="/images/custom-track.png">
+
+The resulting circuit has three tracks. We didn't put anything on the `:failure` track, but it is still there. Note that, in a `Railway`, mapping the `:success` output does create the desired plus pole. However, the `:failure` output, per default, is still pointing to the `:failure` track and will result in deviation to it should `auth_err` or `reset_counter` return the `Left` signal.
+
+### Path
+
+> The `Path()` helper lets you build a custom track.
+
+```ruby
+<%= snippet :activity, "path", file: "docs/railway_test.rb" %>
+```
+
+Instead of having to pass around the track color of the [custom track](#activity-custom-track), you can use the `Path()` helper to branch out and build an additional linear flow.
+
+<img src="/images/custom-track.png">
+
+The circuit looks identical to a [custom track](#activity-custom-track).
+
+A path will always end in an end event with a `:success` semantic, which is why the last task is explicitly connected via `End()`. This results in a track end where you define the semantic.
+
+#### End Semantic
+
+> The `:end_semantic` option allows reusing the default end with a semantic you pick.
+
+```ruby
+<%= snippet :activity, "path-end", file: "docs/railway_test.rb" %>
+```
+
+The `Path()` helper accepts a `:end_semantic` option to assign a custom semantic.
+
+The circuit looks identical to a [custom track](#activity-custom-track).
+
+### Join
+
+```ruby
+<%= snippet :activity, "join", collapse: "methods", file: "docs/path_test.rb" %>
+```
+
+An extra path can be joined with the outer activity by pointing the last (or any other) task to an existing task in the outer activity.
+
+<img src="/images/path-join.png" >
+
+Only when `find` returns the `Left` signal, the extra path is taken.
+
+See also: [Output: ID](#activity-output-id)

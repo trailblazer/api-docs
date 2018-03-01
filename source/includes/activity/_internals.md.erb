@@ -1,0 +1,50 @@
+## Internals
+
+All code necessary to define and run activities is implemented in the [`activity` gem](https://github.com/trailblazer/trailblazer-operation). The gem consists of two completely decoupled components: declarative code for the DSL, and runtime code. We were thinking of physically separating them into `activity` and `activity-dsl`, but refrained from that step so far.
+
+### DSL
+
+> The `Activity` is nothing but a DSL.
+
+```ruby
+module Create
+  extend Trailblazer::Activity::Railway()
+  # ...
+  step method(:find_model)
+  step method(:update)
+  step method(:save)
+end
+```
+
+> The DSL creates a runtime object, called _circuit_.
+
+```ruby
+Create.to_h[:circuit] #=> #<Trailblazer::Activity::Circuit ...>
+```
+
+
+
+The `activity/dsl` directory contains all DSL-specific code to define activities using the declarative DSL (e.g. `step`). It also contains the `Activity` module itself, which _is_ nothing but a DSL. When using the DSL in an activity or operation, a run-time object called _circuit_ is created and stored.
+
+***You don't have to use our DSL, you can simply create `Circuit` objects manually, which are a bit more than a hash along with a [_circuit interface_](#activity-circuit-interface). You can even write your own DSL. The circuit doesn't have any clue about the DSL and how it was created.***
+
+While the DSL code might look overwhelming at first with its `Builder` and `Normalizer` and `Finalizer`, it's actually pretty straight-forward. Huge parts of the activity code are written using activities themselves, since we needed workflows here, too. This greatly improves consistency and makes the code easier to read (and maintain).
+
+### Runtime
+
+Goal of the [DSL](#activity-dsl) is to make the creation of runtime objects as simple as possible for developers. It also allows to compose more complex activities from multiple components. However, it all boils down to microscopic, light-weight hash objects with a `call` method, the so called _circuits_.
+
+The runtime code sits directly in the `activity/` directory.
+
+A `Circuit` instance only contains flow instructions, dictating the order of the tasks to be called, what signal leads to what task, and so on. By invoking the `Circuit#call` method, this flow is launched, and it returns whatever the last task or end event returns.
+
+***It's tremendously important to understand the separation of concerns here: a circuit has zero knowledge about the DSL, how it was created, save what is a `step`. It's a mapping hash of instructions, its goal is to invoke callable objects (your steps) in the right order.***
+
+There are two obvious benefits from this design.
+
+* In order to use and debug Trailblazer's activities, you don't have to understand the DSL code. You will only be dealing with runtime circuits, anyway.
+* The DSL is completely replaceable. If your company comes up with a next-gen way of defining circuits, it's a matter of following interfaces to swap DSLs.
+
+### Magnetism
+
+bla
