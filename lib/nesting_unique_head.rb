@@ -4,12 +4,16 @@ require 'middleman-core/renderers/redcarpet'
 class NestingUniqueHeadCounter < Middleman::Renderers::MiddlemanRedcarpetHTML
   def initialize
     super
+
+    @headers = {}
+
     @@headers_history = {} if !defined?(@@headers_history)
   end
 
   def header(text, header_level)
     anchor = text.parameterize
     @@headers_history[header_level] = text.parameterize
+    @headers[header_level]          = text # this is such bad programming.
 
     # pp @@headers_history
     if header_level > 1
@@ -27,11 +31,12 @@ class NestingUniqueHeadCounter < Middleman::Renderers::MiddlemanRedcarpetHTML
     #  3=>"subprocess",
     #  4=>"composition-subprocess-automatic-wiring"}
 
-    path = @@headers_history.values
+ # pp @headers
+    path = @headers
 
     breadcrumb = ""
-    breadcrumb = %{<div><span>#{path[1]} /</span> #{path[2]}</div>} if header_level == 4
-    breadcrumb = %{<div><span>#{path[1]}</span></div>} if header_level == 3
+    breadcrumb = %{<div><span>#{path[2]} /</span> #{path[3]}</div>} if header_level == 4
+    breadcrumb = %{<div><span>#{path[2]}</span></div>}              if header_level == 3
 
 
 
