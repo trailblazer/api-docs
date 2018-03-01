@@ -402,7 +402,7 @@ The `activity` gem provides the `Subprocess` macro as a short-cut when nesting a
 <%= snippet :activity, "merge", file: "docs/merge_test.rb" %>
 ```
 
-Instead of modelling the `Update` activity as a real composition where a part of the implementation sits in a physically separated component and is [delegated to via nesting](#activity-composition-subprocess), you can also copy the "implementation" directly into the composing activity. This will merge the steps into the activity. In many cases, this is a fair solution that simplifies the flow.
+Instead of modelling the `Update` activity as a real composition (with two separated activities and [delegation via nesting](#activity-composition-subprocess)) you can also copy one activity directly into another. This will merge the steps into the activity, as if you had copied the merged activity where `merge!` is. In many cases, this is a fair solution that simplifies the flow.
 
 <img src="/images/merge.png">
 
