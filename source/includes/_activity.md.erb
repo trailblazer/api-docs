@@ -578,6 +578,8 @@ While the DSL code might look overwhelming at first with its `Builder` and `Norm
 
 Goal of the [DSL](#activity-dsl) is to make the creation of runtime objects as simple as possible for developers. It also allows to compose more complex activities from multiple components. However, it all boils down to microscopic, light-weight hash objects with a `call` method, the so called _circuits_.
 
+The runtime code sits directly in the `activity/` directory.
+
 A `Circuit` instance only contains flow instructions, dictating the order of the tasks to be called, what signal leads to what task, and so on. By invoking the `Circuit#call` method, this flow is launched, and it returns whatever the last task or end event returns.
 
 ***It's tremendously important to understand the separation of concerns here: a circuit has zero knowledge about the DSL, how it was created, save what is a `step`. It's a mapping hash of instructions, its goal is to invoke callable objects (your steps) in the right order.***
