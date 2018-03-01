@@ -570,7 +570,7 @@ html, body {
 
   blockquote {
     &>p {
-      background-color: $code-annotation-bg;
+      background-color: $nav-bg;
       padding: $code-annotation-padding 2em;
       color: #eee;
     }
