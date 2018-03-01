@@ -21,6 +21,12 @@ class NestingUniqueHeadCounter < Middleman::Renderers::MiddlemanRedcarpetHTML
       # end
     end
 
+    # pp @@headers_history
+    # {1=>"activity",
+    #  2=>"path",
+    #  3=>"subprocess",
+    #  4=>"composition-subprocess-automatic-wiring"}
+
     return "<h#{header_level} id='#{friendly_text}'>#{text}</h#{header_level}>"
   end
 

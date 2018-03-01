@@ -322,13 +322,18 @@ A main intent of Trailblazer's activities is reusability. As opposed to TRB 1.x,
 1. The _Merge API_ allows to "copy" activities or parts of it into others and hence merge them.
 2. You can use _nesting_ to call acitivies from activities and maintain cleanly encapsulated flows.
 
-## Composition: Subprocess
+### Composition: Subprocess
 
 To model more complex activities and maximize reusability, a task can be an activity itself. This is called _nesting_, in BPMN, a nested activity is called _Subprocess_.
 
 ***When nesting activities, [all mechanics from `Output`](#activity-output) apply, it's just the output _signal_ that is slightly different.***
 
-### Automatic Wiring
+<h4>
+  <div><span>Composition /</span> Subprocess</div>
+  Automatic Wiring
+</h4>
+
+#### Composition / Subprocess / Automatic Wiring
 
 > The nested activity is a simple Railway with two ends.
 
