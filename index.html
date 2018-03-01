@@ -268,6 +268,9 @@
                   <li>
                     <a href="#activity-join" class="toc-h2 toc-link" data-title="join">Join</a>
                   </li>
+                  <li>
+                    <a href="#activity-internals" class="toc-h2 toc-link" data-title="internals">Internals</a>
+                  </li>
               </ul>
           </li>
           <li>
@@ -823,7 +826,7 @@ to_h</p>
 <span class="k">end</span>
 
 </code></pre>
-<p>Instead of modelling the <code>Update</code> activity as a real composition where a part of the implementation sits in a physically separated component and is <a href="#activity-composition-subprocess">delegated to via nesting</a>, you can also copy the &quot;implementation&quot; directly into the composing activity. This will merge the steps into the activity. In many cases, this is a fair solution that simplifies the flow.</p>
+<p>Instead of modelling the <code>Update</code> activity as a real composition (with two separated activities and <a href="#activity-composition-subprocess">delegation via nesting</a>) you can also copy one activity directly into another. This will merge the steps into the activity, as if you had copied the merged activity where <code>merge!</code> is. In many cases, this is a fair solution that simplifies the flow.</p>
 
 <p><img src="images/merge.png"></p>
 
@@ -999,6 +1002,43 @@ to_h</p>
 <p>Only when <code>find</code> returns the <code>Left</code> signal, the extra path is taken.</p>
 
 <p>See also: <a href="#activity-output-id">Output: ID</a></p>
+<h2 id='activity-internals'>Internals</h2>
+<p>All code necessary to define and run activities is implemented in the <a href="https://github.com/trailblazer/trailblazer-operation"><code>activity</code> gem</a>. The gem consists of two completely decoupled components: declarative code for the DSL, and runtime code. We were thinking of physically separating them into <code>activity</code> and <code>activity-dsl</code>, but refrained from that step so far.</p>
+<h3 id='activity-dsl'>DSL</h3>
+<blockquote>
+<p>The <code>Activity</code> is nothing but a DSL.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">)</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:update</span><span class="p">)</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:save</span><span class="p">)</span>
+<span class="k">end</span>
+</code></pre>
+<blockquote>
+<p>The DSL creates a runtime object, called <em>circuit</em>.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="no">Create</span><span class="p">.</span><span class="nf">to_h</span><span class="p">[</span><span class="ss">:circuit</span><span class="p">]</span> <span class="c1">#=&gt; #&lt;Trailblazer::Activity::Circuit ...&gt;</span>
+</code></pre>
+<p>The <code>activity/dsl</code> directory contains all DSL-specific code to define activities using the declarative DSL (e.g. <code>step</code>). It also contains the <code>Activity</code> module itself, which <em>is</em> nothing but a DSL. When using the DSL in an activity or operation, a run-time object called <em>circuit</em> is created and stored.</p>
+
+<p><aside class="notice">You don&#39;t have to use our DSL, you can simply create <code>Circuit</code> objects manually, which are a bit more than a hash along with a <a href="#activity-circuit-interface"><em>circuit interface</em></a>. You can even write your own DSL. The circuit doesn&#39;t have any clue about the DSL and how it was created.</aside></p>
+
+<p>While the DSL code might look overwhelming at first with its <code>Builder</code> and <code>Normalizer</code> and <code>Finalizer</code>, it&#39;s actually pretty straight-forward. Huge parts of the activity code are written using activities themselves, since we needed workflows here, too. This greatly improves consistency and makes the code easier to read (and maintain).</p>
+<h3 id='activity-runtime'>Runtime</h3>
+<p>Goal of the <a href="#activity-dsl">DSL</a> is to make the creation of runtime objects as simple as possible for developers. It also allows to compose more complex activities from multiple components. However, it all boils down to microscopic, light-weight hash objects with a <code>call</code> method, the so called <em>circuits</em>.</p>
+
+<p>A <code>Circuit</code> instance only contains flow instructions, dictating the order of the tasks to be called, what signal leads to what task, and so on. By invoking the <code>Circuit#call</code> method, this flow is launched, and it returns whatever the last task or end event returns.</p>
+
+<p><aside class="notice">It&#39;s tremendously important to understand the separation of concerns here: a circuit has zero knowledge about the DSL, how it was created, save what is a <code>step</code>. It&#39;s a mapping hash of instructions, its goal is to invoke callable objects (your steps) in the right order.</aside></p>
+
+<p>There are two obvious benefits from this design.</p>
+
+<ul>
+<li>In order to use and debug Trailblazer&#39;s activities, you don&#39;t have to understand the DSL code. You will only be dealing with runtime circuits, anyway.</li>
+<li>The DSL is completely replaceable. If your company comes up with a next-gen way of defining circuits, it&#39;s a matter of following interfaces to swap DSLs.</li>
+</ul>
 <h1 id='operation'>Operation</h1>
 <blockquote>
 <p>Example for an operation that doesn&#39;t use any TRB macros. It creates a fresh <code>Memo</code> instance.</p>
