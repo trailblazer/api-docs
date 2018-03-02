@@ -242,6 +242,18 @@
 </a>
                   </li>
                   <li>
+                    <a href="#activity-definition" class="toc-h2 toc-link" data-title="definition">
+  
+  Definition
+</a>
+                  </li>
+                  <li>
+                    <a href="#activity-strategy" class="toc-h2 toc-link" data-title="strategy">
+  
+  Strategy
+</a>
+                  </li>
+                  <li>
                     <a href="#activity-interfaces" class="toc-h2 toc-link" data-title="interfaces">
   
   Interfaces
@@ -269,6 +281,12 @@
                     <a href="#activity-wiring-api" class="toc-h2 toc-link" data-title="wiring-api">
   
   Wiring API
+</a>
+                  </li>
+                  <li>
+                    <a href="#activity-tracing" class="toc-h2 toc-link" data-title="tracing">
+  
+  Tracing
 </a>
                   </li>
                   <li>
@@ -472,6 +490,8 @@
   What is Trailblazer?
 </h1>
 <p>The idea of 2.1 is: If you can&#39;t draw it, you can&#39;t code it.</p>
+
+<p>business logic framework, no routing, no rendering, no database.</p>
 <h1 id="activity">
   
   Activity
@@ -634,18 +654,39 @@
 <p><img src="images/activity-anatomy-5.png" ></p>
 
 <p>All mentioned modelling concepts will be explained in detail in the following sections.</p>
-<h3 id="activity-anatomy-definition">
-  <div><span>Anatomy</span></div>
+<h2 id="activity-definition">
+  
   Definition
+</h2><h3 id="activity-definition-call">
+  <div><span>Definition</span></div>
+  Call
+</h3><h3 id="activity-definition-context">
+  <div><span>Definition</span></div>
+  Context
 </h3>
 <p>SomeModule.method(:find)</p>
-<h2 id="activity-interfaces">
+<h3 id="activity-definition-callable">
+  <div><span>Definition</span></div>
+  Callable
+</h3><h3 id="activity-definition-macro-api">
+  <div><span>Definition</span></div>
+  Macro API
+</h3><h2 id="activity-strategy">
+  
+  Strategy
+</h2><h3 id="activity-strategy-path">
+  <div><span>Strategy</span></div>
+  Path
+</h3><h3 id="activity-strategy-railway">
+  <div><span>Strategy</span></div>
+  Railway
+</h3><h3 id="activity-strategy-fasttrack">
+  <div><span>Strategy</span></div>
+  FastTrack
+</h3><h2 id="activity-interfaces">
   
   Interfaces
-</h2><h3 id="activity-interfaces-call">
-  <div><span>Interfaces</span></div>
-  Call
-</h3><h3 id="activity-interfaces-task-interface">
+</h2><h3 id="activity-interfaces-task-interface">
   <div><span>Interfaces</span></div>
   Task Interface
 </h3>
@@ -1182,6 +1223,11 @@ to_h</p>
 <p>Only when <code>find</code> returns the <code>Left</code> signal, the extra path is taken.</p>
 
 <p>See also: <a href="#activity-output-id">Output: ID</a></p>
+<h2 id="activity-tracing">
+  
+  Tracing
+</h2>
+<p>To find out the exact flow when invoking one or multiple, nested activities, you can invoke an activity with tracing. Besides tracking the path the execution took, per default this also tracks incoming and outgoing state of every task, by capturing a snapshot of the <code>ctx</code> object.</p>
 <h2 id="activity-internals">
   
   Internals
@@ -1605,8 +1651,8 @@ Orchestration</p>
   Recover
 </h2><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Upload</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
   <span class="n">step</span> <span class="ss">:upload_to_s3</span>
-  <span class="nb">fail</span> <span class="ss">:upload_to_azure</span><span class="p">,</span>  <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:success</span>
-  <span class="nb">fail</span> <span class="ss">:upload_to_b2</span><span class="p">,</span>     <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:success</span>
+  <span class="nb">fail</span> <span class="ss">:upload_to_azure</span><span class="p">,</span>  <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span>
+  <span class="nb">fail</span> <span class="ss">:upload_to_b2</span><span class="p">,</span>     <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span>
   <span class="nb">fail</span> <span class="ss">:log_problem</span>
   <span class="c1"># ...</span>
 <span class="k">end</span>
@@ -1637,7 +1683,7 @@ Orchestration</p>
   
   Decider
 </h2><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Upsert</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
-  <span class="n">step</span> <span class="ss">:find_model</span><span class="p">,</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:create_route</span>
+  <span class="n">step</span> <span class="ss">:find_model</span><span class="p">,</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Track</span><span class="p">(</span><span class="ss">:create_route</span><span class="p">)</span>
   <span class="n">step</span> <span class="ss">:update</span>
   <span class="n">step</span> <span class="ss">:create</span><span class="p">,</span> <span class="ss">magnetic_to: </span><span class="p">[</span><span class="ss">:create_route</span><span class="p">]</span>
   <span class="n">step</span> <span class="ss">:save</span>
