@@ -82,3 +82,23 @@ Obviously, you're not limited to `begin`/`rescue` for `Wrap()`, but can run any 
 You need to translate the transaction's return value(s) into a task interface return set.
 
 ***In Trailblazer 2.0, you could simply return a boolean. This still works in 2.1, but is deprecated in favor of a more explicit return set.***
+
+#### Custom Wiring
+
+> Return any `Signal` subclass from your handler to communicate state.
+
+```ruby
+<%= snippet :macro, "custom-handler", file: "docs/wrap_test.rb" %>
+```
+
+> Use `Output()` to rewire outputs to new or existing connections.
+
+```ruby
+<%= snippet :macro, "custom", file: "docs/wrap_test.rb" %>
+```
+
+With `Wrap()` you're not limited to the Railway. You can return a custom signal from your handler, and wire the wrapped outputs to custom connections.
+
+<img src="/images/wrap-custom.png">
+
+Even though this example would never hit the `notify` step, it shows how flexible you can model wrapped sections and map different errors to different ends. It is usually best to let the `:success` end continue on the "right" track, leave the standard `:failure` end connected to the "left" track, and map additional errors to custom `End()`s.
