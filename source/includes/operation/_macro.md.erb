@@ -1,5 +1,7 @@
 ## Macros
 
+Macros are helper functions that generate steps along with configuration for you. They follow [activity's Macro API](#activity-macro-api). Most macros, such as policies, transaction support, or guards, are provided by the [trailblazer-macro gem](https://trailblazer.to/trailblazer/trailblazer-macro), which is completely optional. Only include it if you want to take advantage of those helpers.
+
 ### Wrap
 
 > Steps can be embraced by a `Wrap()`.
@@ -102,3 +104,17 @@ With `Wrap()` you're not limited to the Railway. You can return a custom signal 
 <img src="/images/wrap-custom.png">
 
 Even though this example would never hit the `notify` step, it shows how flexible you can model wrapped sections and map different errors to different ends. It is usually best to let the `:success` end continue on the "right" track, leave the standard `:failure` end connected to the "left" track, and map additional errors to custom `End()`s.
+
+#### Tracing
+
+```ruby
+<%= snippet :macro, "trace-call", file: "docs/wrap_test.rb" %>
+```
+
+```ruby
+<%= snippet :macro, "trace-success", file: "docs/wrap_test.rb" %>
+```
+
+As always, you can use tracing to track the invocation path, even with `Wrap()`.
+
+Since the wrapped sequence of steps is modelled as a separate activity, tracing will display that section one level indented.
