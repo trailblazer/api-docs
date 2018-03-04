@@ -387,6 +387,18 @@
   Macros
 </a>
                   </li>
+                  <li>
+                    <a href="#operation-wrap" class="toc-h2 toc-link" data-title="wrap">
+  
+  Wrap
+</a>
+                  </li>
+                  <li>
+                    <a href="#operation-rescue" class="toc-h2 toc-link" data-title="rescue">
+  
+  Rescue
+</a>
+                  </li>
               </ul>
           </li>
           <li>
@@ -1785,10 +1797,10 @@ Orchestration</p>
   Macros
 </h2>
 <p>Macros are helper functions that generate steps along with configuration for you. They follow <a href="#activity-macro-api">activity&#39;s Macro API</a>. Most macros, such as policies, transaction support, or guards, are provided by the <a href="https://trailblazer.to/trailblazer/trailblazer-macro">trailblazer-macro gem</a>, which is completely optional. Only include it if you want to take advantage of those helpers.</p>
-<h3 id="operation-macros-wrap">
-  <div><span>Macros</span></div>
+<h2 id="operation-wrap">
+  
   Wrap
-</h3>
+</h2>
 <blockquote>
 <p>Steps can be embraced by a <code>Wrap()</code>.</p>
 </blockquote>
@@ -1828,15 +1840,17 @@ Orchestration</p>
 
 <p>You need to provide a handler which runs the wrapped section and implements the transactional code. The handler can be any callable object (or proc).</p>
 
+<p><aside class="warning"> Make sure to use <code>Wrap() { ... }</code> with curly brackets, otherwise Ruby will swallow the block.</aside></p>
+
 <p>In our example, the <code>HandleUnsafeProcess.call</code> method implements the wrapping by putting the execution of the embraced steps into a <code>begin</code>/<code>rescue</code> construct. Obviously, the implementation of the wrap is completely up to you. Note that the handler&#39;s <code>call</code> method is invoked with the <a href="#activity-interfaces-task-interface">task interface</a> plus a <code>&amp;block</code> that, when <code>yield</code>ed, invokes running the contained steps.</p>
 
 <p>The handler has to return a <a href="#activity-interfaces-task-interface">task interface return set</a>. You&#39;re free to use <code>Railway</code>&#39;s signal helpers to decide what end you want the wrapped activity to stop in. Do not forget to return other circuit arguments like <code>flow_options</code> to keep features such as tracing intact.</p>
 
 <p><aside class="notice">Technically, the wrapped section is a separate activity, where its steps are executed in the outer operation&#39;s context. This allows you to rewire the inner ends to differing outer connections.</aside></p>
-<h4 id="operation-macros-wrap-block-invocation">
-  <div><span>Macros /</span> Wrap</div>
+<h3 id="operation-wrap-block-invocation">
+  <div><span>Wrap</span></div>
   Block Invocation
-</h4><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">HandleUnsafeProcess</span>
+</h3><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">HandleUnsafeProcess</span>
   <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">call</span><span class="p">((</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">),</span> <span class="o">*</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
     <span class="k">begin</span>
       <span class="n">end_event</span><span class="p">,</span> <span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">)</span> <span class="o">=</span> <span class="k">yield</span> <span class="c1"># invokes the wrapped activity</span>
@@ -1849,10 +1863,10 @@ Orchestration</p>
 <p>The block argument passed to the handler can be invoked via <code>block.call</code> or a simple <code>yield</code>. It runs the wrapped steps and returns a task interface return set if it wasn&#39;t interrupted by an exception.</p>
 
 <p><aside class="warning">The return value of this call is crucial - do not dismiss it, always make sure that a proper task interface return set is returned, even for a successful, uninterrupted invocation.</aside></p>
-<h4 id="operation-macros-wrap-return-set">
-  <div><span>Macros /</span> Wrap</div>
+<h3 id="operation-wrap-return-set">
+  <div><span>Wrap</span></div>
   Return set
-</h4>
+</h3>
 <blockquote>
 <p>You can return any signal from the wrap handler.</p>
 </blockquote>
@@ -1874,10 +1888,10 @@ Orchestration</p>
 <p><img src="images/wrap-fail-fast.png"></p>
 
 <p>Given that the <code>rescue</code> block is hit in the <code>Wrap</code> activity, the remaining operation will be skipped, and execution will halt in the <code>fail_fast</code> end event.</p>
-<h4 id="operation-macros-wrap-transaction">
-  <div><span>Macros /</span> Wrap</div>
+<h3 id="operation-wrap-transaction">
+  <div><span>Wrap</span></div>
   Transaction
-</h4>
+</h3>
 <blockquote>
 <p>Your <code>Wrap()</code> handler can also deal with transactions.</p>
 </blockquote>
@@ -1912,10 +1926,10 @@ Orchestration</p>
 <p>You need to translate the transaction&#39;s return value(s) into a task interface return set.</p>
 
 <p><aside class="notice">In Trailblazer 2.0, you could simply return a boolean. This still works in 2.1, but is deprecated in favor of a more explicit return set.</aside></p>
-<h4 id="operation-macros-wrap-custom-wiring">
-  <div><span>Macros /</span> Wrap</div>
+<h3 id="operation-wrap-custom-wiring">
+  <div><span>Wrap</span></div>
   Custom Wiring
-</h4>
+</h3>
 <blockquote>
 <p>Return any <code>Signal</code> subclass from your handler to communicate state.</p>
 </blockquote>
@@ -1954,10 +1968,10 @@ Orchestration</p>
 <p><img src="images/wrap-custom.png"></p>
 
 <p>Even though this example would never hit the <code>notify</code> step, it shows how flexible you can model wrapped sections and map different errors to different ends. It is usually best to let the <code>:success</code> end continue on the &quot;right&quot; track, leave the standard <code>:failure</code> end connected to the &quot;left&quot; track, and map additional errors to custom <code>End()</code>s.</p>
-<h4 id="operation-macros-wrap-tracing">
-  <div><span>Macros /</span> Wrap</div>
+<h3 id="operation-wrap-tracing">
+  <div><span>Wrap</span></div>
   Tracing
-</h4><pre class="highlight ruby tab-ruby"><code><span class="n">result</span>  <span class="o">=</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">trace</span><span class="p">(</span> <span class="n">options</span> <span class="p">)</span>
+</h3><pre class="highlight ruby tab-ruby"><code><span class="n">result</span>  <span class="o">=</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">trace</span><span class="p">(</span> <span class="n">options</span> <span class="p">)</span>
 
 </code></pre><pre class="highlight ruby tab-ruby"><code><span class="n">result</span><span class="p">.</span><span class="nf">wtf?</span> <span class="c1">#=&gt;</span>
 <span class="o">|--</span> <span class="c1">#&lt;Trailblazer::Activity::Start semantic=:default&gt;</span>
@@ -1974,6 +1988,64 @@ Orchestration</p>
 <p>As always, you can use tracing to track the invocation path, even with <code>Wrap()</code>.</p>
 
 <p>Since the wrapped sequence of steps is modelled as a separate activity, tracing will display that section one level indented.</p>
+<h2 id="operation-rescue">
+  
+  Rescue
+</h2>
+<blockquote>
+<p><code>Rescue()</code> will catch the exception classes you provide.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:find_model</span>
+  <span class="n">step</span> <span class="no">Rescue</span><span class="p">(</span> <span class="no">RuntimeError</span><span class="p">,</span> <span class="ss">handler: </span><span class="no">MyHandler</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="n">step</span> <span class="ss">:update</span>
+    <span class="n">step</span> <span class="ss">:rehash</span>
+  <span class="p">}</span>
+  <span class="n">step</span> <span class="ss">:notify</span>
+  <span class="nb">fail</span> <span class="ss">:log_error</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<blockquote>
+<p>The handler is a callable object.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">MyHandler</span>
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">call</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="p">(</span><span class="n">ctx</span><span class="p">),</span> <span class="o">*</span><span class="p">)</span>
+    <span class="n">ctx</span><span class="p">[</span><span class="ss">:exception_class</span><span class="p">]</span> <span class="o">=</span> <span class="n">exception</span><span class="p">.</span><span class="nf">class</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>While you could use the <a href="#operation-macros-rescue"><code>Wrap()</code> macro</a> to catch exceptions and process those, Trailblazer provides the <code>Rescue()</code> macro that embraces the calling of the nested activity into a <code>begin</code>/<code>rescue</code> block and allows to pass in a custom handler in case of an exception.</p>
+
+<p><aside class="warning"> Make sure to use <code>Rescue() { ... }</code> with curly brackets, otherwise Ruby will swallow the block.</aside></p>
+
+<p>You may pass any number of exceptions you desire to catch, along with your <code>:handler</code> callable. The handler is called automatically if an exception was raised, it receives the latter as the first positional argument, followed by a task interface signature.</p>
+
+<p>Per default, if the handler was invoked, the operation will deviate to the left track.</p>
+
+<p><aside class="notice">If you do want to take another path, use <code>Wrap()</code> and return the signal that suits you. If you think that <code>Rescue()</code> should be configurable to return a different signal, <a href="https://gitter.im/trailblazer/chat">contact us</a>. We appreciate your input.</aside></p>
+<h3 id="operation-rescue-instance-method">
+  <div><span>Rescue</span></div>
+  Instance method
+</h3><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:find_model</span>
+  <span class="n">step</span> <span class="no">Rescue</span><span class="p">(</span> <span class="no">RuntimeError</span><span class="p">,</span> <span class="ss">handler: :my_handler</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="n">step</span> <span class="ss">:update</span>
+    <span class="n">step</span> <span class="ss">:rehash</span>
+  <span class="p">}</span>
+  <span class="n">step</span> <span class="ss">:notify</span>
+  <span class="nb">fail</span> <span class="ss">:log_error</span>
+  <span class="c1"># ...</span>
+
+  <span class="k">def</span> <span class="nf">my_handler</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="p">(</span><span class="n">ctx</span><span class="p">),</span> <span class="o">*</span><span class="p">)</span>
+    <span class="n">ctx</span><span class="p">[</span><span class="ss">:exception_class</span><span class="p">]</span> <span class="o">=</span> <span class="n">exception</span><span class="p">.</span><span class="nf">class</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>The handler may also be an instance method on the operation. It has the exact same API than a callable object.</p>
 <h1 id="trailblazer">
   
   Trailblazer
@@ -2013,7 +2085,14 @@ Orchestration</p>
 </h2><h3 id="trailblazer-migration-path-2-0-to-2-1">
   <div><span>Migration Path</span></div>
   2.0 to 2.1
-</h3><h4 id="trailblazer-migration-path-2-0-to-2-1-wrap">
+</h3><h4 id="trailblazer-migration-path-2-0-to-2-1-smaller-gems">
+  <div><span>Migration Path /</span> 2.0 to 2.1</div>
+  Smaller gems
+</h4>
+<p>Trailblazer as a framework is often associated with <a href="#reform">Reform</a>, and as a service object &quot;around a form object&quot;. This is, of course, not exactly true. In order to clarify that TRB has zero coupling to Reform, we ripped out all Reform-specific macros and moved them to <a href="https://github.com/trailblazer/trailblazer-macro-contract"><code>trailblazer-macro-contract</code></a>, and all other macros to <a href="https://github.com/trailblazer/trailblazer-macro"><code>trailblazer-macro</code></a>.</p>
+
+<p>Another benefit apart from clarifying the boundaries is that all other parts of Trailblazer, such as activities and workflows, can be used without Reform.</p>
+<h4 id="trailblazer-migration-path-2-0-to-2-1-wrap">
   <div><span>Migration Path /</span> 2.0 to 2.1</div>
   Wrap
 </h4>
@@ -2061,7 +2140,9 @@ Orchestration</p>
 
 <p>We decided that the handler implementation, as a private concept, can be a bit more complicated, because in turn the operations using <code>Wrap</code> now are a lot simpler.</p>
 
-<p><a href="#operation-macro-wrap">New <code>Wrap()</code> docs</a>.</p>
+<p><aside class="warning">Both the signature and the return value change are soft-deprecated.</aside></p>
+
+<p><a href="#operation-macros-wrap">New <code>Wrap()</code> docs</a>.</p>
 <h1 id="test">
   
   Test
