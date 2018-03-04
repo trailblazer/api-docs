@@ -2,7 +2,7 @@
 
 Macros are helper functions that generate steps along with configuration for you. They follow [activity's Macro API](#activity-macro-api). Most macros, such as policies, transaction support, or guards, are provided by the [trailblazer-macro gem](https://trailblazer.to/trailblazer/trailblazer-macro), which is completely optional. Only include it if you want to take advantage of those helpers.
 
-### Wrap
+## Wrap
 
 > Steps can be embraced by a `Wrap()`.
 
@@ -24,13 +24,15 @@ When running one or multiple steps with critical, transactional logic, it is oft
 
 You need to provide a handler which runs the wrapped section and implements the transactional code. The handler can be any callable object (or proc).
 
+***! Make sure to use `Wrap() { ... }` with curly brackets, otherwise Ruby will swallow the block.***
+
 In our example, the `HandleUnsafeProcess.call` method implements the wrapping by putting the execution of the embraced steps into a `begin`/`rescue` construct. Obviously, the implementation of the wrap is completely up to you. Note that the handler's `call` method is invoked with the [task interface](#activity-interfaces-task-interface) plus a `&block` that, when `yield`ed, invokes running the contained steps.
 
 The handler has to return a [task interface return set](#activity-interfaces-task-interface). You're free to use `Railway`'s signal helpers to decide what end you want the wrapped activity to stop in. Do not forget to return other circuit arguments like `flow_options` to keep features such as tracing intact.
 
 ***Technically, the wrapped section is a separate activity, where its steps are executed in the outer operation's context. This allows you to rewire the inner ends to differing outer connections.***
 
-#### Block Invocation
+### Block Invocation
 
 ```ruby
 class HandleUnsafeProcess
@@ -49,7 +51,7 @@ The block argument passed to the handler can be invoked via `block.call` or a si
 
 ***!The return value of this call is crucial - do not dismiss it, always make sure that a proper task interface return set is returned, even for a successful, uninterrupted invocation.***
 
-#### Return set
+### Return set
 
 > You can return any signal from the wrap handler.
 
@@ -65,7 +67,7 @@ For example, by returning a `Railway.fail_fast!` instead of `fail!`, you can dev
 
 Given that the `rescue` block is hit in the `Wrap` activity, the remaining operation will be skipped, and execution will halt in the `fail_fast` end event.
 
-#### Transaction
+### Transaction
 
 > Your `Wrap()` handler can also deal with transactions.
 
@@ -85,7 +87,7 @@ You need to translate the transaction's return value(s) into a task interface re
 
 ***In Trailblazer 2.0, you could simply return a boolean. This still works in 2.1, but is deprecated in favor of a more explicit return set.***
 
-#### Custom Wiring
+### Custom Wiring
 
 > Return any `Signal` subclass from your handler to communicate state.
 
@@ -105,7 +107,7 @@ With `Wrap()` you're not limited to the Railway. You can return a custom signal 
 
 Even though this example would never hit the `notify` step, it shows how flexible you can model wrapped sections and map different errors to different ends. It is usually best to let the `:success` end continue on the "right" track, leave the standard `:failure` end connected to the "left" track, and map additional errors to custom `End()`s.
 
-#### Tracing
+### Tracing
 
 ```ruby
 <%= snippet :macro, "trace-call", file: "docs/wrap_test.rb" %>
@@ -118,3 +120,36 @@ Even though this example would never hit the `notify` step, it shows how flexibl
 As always, you can use tracing to track the invocation path, even with `Wrap()`.
 
 Since the wrapped sequence of steps is modelled as a separate activity, tracing will display that section one level indented.
+
+## Rescue
+
+> `Rescue()` will catch the exception classes you provide.
+
+```ruby
+<%= snippet :macro, "rescue", file: "docs/rescue_test.rb" %>
+```
+
+> The handler is a callable object.
+
+```ruby
+<%= snippet :macro, "rescue-handler", file: "docs/rescue_test.rb" %>
+```
+
+While you could use the [`Wrap()` macro](#operation-macros-rescue) to catch exceptions and process those, Trailblazer provides the `Rescue()` macro that embraces the calling of the nested activity into a `begin`/`rescue` block and allows to pass in a custom handler in case of an exception.
+
+***! Make sure to use `Rescue() { ... }` with curly brackets, otherwise Ruby will swallow the block.***
+
+You may pass any number of exceptions you desire to catch, along with your `:handler` callable. The handler is called automatically if an exception was raised, it receives the latter as the first positional argument, followed by a task interface signature.
+
+Per default, if the handler was invoked, the operation will deviate to the left track.
+
+***If you do want to take another path, use `Wrap()` and return the signal that suits you. If you think that `Rescue()` should be configurable to return a different signal, [contact us](https://gitter.im/trailblazer/chat). We appreciate your input.***
+
+### Instance method
+
+```ruby
+<%= snippet :macro, "rescue-method", file: "docs/rescue_test.rb" %>
+```
+
+The handler may also be an instance method on the operation. It has the exact same API than a callable object.
+
