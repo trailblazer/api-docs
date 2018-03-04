@@ -29,3 +29,34 @@ The handler has to return a [task interface return set](#activity-interfaces-tas
 ***Technically, the wrapped section is a separate activity, where its steps are executed in the outer operation's context. This allows you to rewire the inner ends to differing outer connections.***
 
 #### Block Invocation
+
+```ruby
+class HandleUnsafeProcess
+  def self.call((ctx, flow_options), *, &block)
+    begin
+      end_event, (ctx, flow_options) = yield # invokes the wrapped activity
+    #rescue
+    #...
+    end
+  end
+end
+```
+
+
+The block argument passed to the handler can be invoked via `block.call` or a simple `yield`. It runs the wrapped steps and returns a task interface return set if it wasn't interrupted by an exception.
+
+***!The return value of this call is crucial - do not dismiss it, always make sure that a proper task interface return set is returned, even for a successful, uninterrupted invocation.***
+
+#### Return set
+
+> You can return any signal from the wrap handler.
+
+```ruby
+<%= snippet :macro, "fail-fast-handler", file: "docs/wrap_test.rb" %>
+```
+
+The returned value from the handler always has to be a [task interface return set](#activity-interfaces-task-interface). While this might feel cumbersome, it allows you to interpret possible outcomes from the wrapped steps, and communicate different states to the remaining, outer activity via different end events.
+
+For example, by returning a `Railway.fail_fast!` instead of `fail!`, you can deviate the flow to fail fast if an exception happened.
+
+<img src="/images/wrap-fail-fast.png">
