@@ -14,6 +14,7 @@ includes:
   - activity/wiring_api
   - activity/internals
   - operation
+  - operation/macro
   - trailblazer
   - test
   - workflow
@@ -29,7 +30,7 @@ search: true
 torture:
   activity:
     root:         DOCS/trailblazer-activity/test
-    root:         ../circuit/test
+    root:         ../trailblazer-circuit/test
     default_file: docs/activity_test.rb
     branch:       master
   operation:
@@ -39,6 +40,10 @@ torture:
     branch:       master
   trailblazer:
     root:         ../DOCS/trailblazer,master
+  macro:
+    root:         DOCS/trailblazer-macro/test
+    root:         ../trailblazer-macro/test
+    default_file: docs/wrap_test.rb
 ---
 
 # What is Trailblazer?
@@ -46,3 +51,4 @@ torture:
 The idea of 2.1 is: If you can't draw it, you can't code it.
 
 business logic framework, no routing, no rendering, no database.
+standards (ctx,etc)

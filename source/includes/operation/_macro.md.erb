@@ -1,0 +1,31 @@
+## Macros
+
+### Wrap
+
+> Steps can be embraced by a `Wrap()`.
+
+```ruby
+<%= snippet :macro, "wrap", file: "docs/wrap_test.rb" %>
+```
+
+> Any callable object can be handling the actual wrapping logic.
+
+```ruby
+<%= snippet :macro, "wrap-handler", file: "docs/wrap_test.rb" %>
+```
+
+> If an exception is caught, the `fail!` method produces a `Left` signal that will deviate the flow to the left track, resulting in `notify` not being called and a `failure` end state.
+
+When running one or multiple steps with critical, transactional logic, it is often desirable to wrap this section with a handler. The `Wrap()` macro allows to place steps into any kind of transaction handler that might catch exceptions, lock the database for the duration of the wrapped steps, or wrap a transaction around them.
+
+<img src="/images/wrap.png">
+
+You need to provide a handler which runs the wrapped section and implements the transactional code. The handler can be any callable object (or proc).
+
+In our example, the `HandleUnsafeProcess.call` method implements the wrapping by putting the execution of the embraced steps into a `begin`/`rescue` construct. Obviously, the implementation of the wrap is completely up to you. Note that the handler's `call` method is invoked with the [task interface](#activity-interfaces-task-interface) plus a `&block` that, when `yield`ed, invokes running the contained steps.
+
+The handler has to return a [task interface return set](#activity-interfaces-task-interface). You're free to use `Railway`'s signal helpers to decide what end you want the wrapped activity to stop in. Do not forget to return other circuit arguments like `flow_options` to keep features such as tracing intact.
+
+***Technically, the wrapped section is a separate activity, where its steps are executed in the outer operation's context. This allows you to rewire the inner ends to differing outer connections.***
+
+#### Block Invocation
