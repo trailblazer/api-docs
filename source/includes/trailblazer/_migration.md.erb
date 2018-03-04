@@ -60,3 +60,23 @@ We decided that the handler implementation, as a private concept, can be a bit m
 
 [New `Wrap()` docs](#operation-macros-wrap).
 
+#### Rescue
+
+> In 2.0, it was a plain list.
+
+```ruby
+def my_handler(exception, ctx)
+
+end
+```
+
+> In 2.1, it's exception plus task interface.
+
+```ruby
+def my_handler(exception, (ctx, flow_options), **)
+
+end
+```
+
+
+The signature for `Rescue()` handlers is now a positional argument (the exception) plus the task interface signature.
