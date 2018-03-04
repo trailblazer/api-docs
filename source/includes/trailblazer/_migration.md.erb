@@ -1,0 +1,54 @@
+## Migration Path
+
+### 2.0 to 2.1
+
+#### Wrap
+
+> Consider this exemplary wrap.
+
+```ruby
+step Wrap( MyTransaction ) {
+```
+
+> In 2.0, the `call` method receives a positional argument, and returns true or false.
+
+```ruby
+class MyTransaction
+  def self.call(ctx, *)
+    Sequel.transaction { yield } #=> returns true/false
+  end
+end
+```
+
+> In 2.1, both the incoming signature and the outgoing return value are task interface-compliant.
+
+```ruby
+class MyTransaction
+  def self.call((ctx, flow_options), *, &block)
+    result = Sequel.transaction { yield }
+
+    signal = result ? Trailblazer::Operation::Railway.pass! : Trailblazer::Operation::Railway.fail!
+
+    [ signal, [ctx, flow_options] ]
+  end
+end
+```
+
+***In the 2.0 docs, we were explaining the `Wrap()` macro with handler lambdas. In the new docs, we mostly use a class with `call` method, since it looks less cryptic and we want to encourage this style.***
+
+The wrap **handler's signature** used to be one positional argument, like `call(options, *, &block)`. This is now changed to a task interface, plus a block argument representing the wrapped activity: `call((ctx, flow_options), *, &block)`.
+
+While this might look more complicated due to the array decomposition, it is a lot cleaner and resulted in a simpler implementation, plus allowing you to process any circuit arguments.
+
+
+In 2.0, the handler's **return value** was either `true` or `false`, deciding whether to stay on the right path, or go to the error track. While it was pretty convenient to write handlers, it turned out that it was almost impossible to act differently on different outcomes of the wrapped code.
+
+This is why, in 2.1, the return value is a task interface-compatible return set, where the first value is a signal. This has two major benefits.
+
+1. The interface of a handler is now following the task interface, making it easier to memoize.
+2. By returning signals, you can maintain more then the former binary result state from the `Wrap`: it's now possible to communicate different states via different signals, and further wire those ends to different connections in the outer activity.
+
+We decided that the handler implementation, as a private concept, can be a bit more complicated, because in turn the operations using `Wrap` now are a lot simpler.
+
+[New `Wrap()` docs](#operation-macro-wrap).
+
