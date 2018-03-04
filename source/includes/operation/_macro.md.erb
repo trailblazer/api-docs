@@ -60,3 +60,25 @@ The returned value from the handler always has to be a [task interface return se
 For example, by returning a `Railway.fail_fast!` instead of `fail!`, you can deviate the flow to fail fast if an exception happened.
 
 <img src="/images/wrap-fail-fast.png">
+
+Given that the `rescue` block is hit in the `Wrap` activity, the remaining operation will be skipped, and execution will halt in the `fail_fast` end event.
+
+#### Transaction
+
+> Your `Wrap()` handler can also deal with transactions.
+
+```ruby
+<%= snippet :macro, "transaction-handler", file: "docs/wrap_test.rb" %>
+```
+
+> Simply pass your handler into the macro call.
+
+```ruby
+<%= snippet :macro, "transaction", file: "docs/wrap_test.rb" %>
+```
+
+Obviously, you're not limited to `begin`/`rescue` for `Wrap()`, but can run any transactional code. Often, this macro is used in combination with ActiveRecord's or Sequel's `transaction`.
+
+You need to translate the transaction's return value(s) into a task interface return set.
+
+***In Trailblazer 2.0, you could simply return a boolean. This still works in 2.1, but is deprecated in favor of a more explicit return set.***
