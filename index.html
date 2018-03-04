@@ -290,6 +290,18 @@
 </a>
                   </li>
                   <li>
+                    <a href="#activity-debugging" class="toc-h2 toc-link" data-title="debugging">
+  
+  Debugging
+</a>
+                  </li>
+                  <li>
+                    <a href="#activity-macro-api" class="toc-h2 toc-link" data-title="macro-api">
+  
+  Macro API
+</a>
+                  </li>
+                  <li>
                     <a href="#activity-internals" class="toc-h2 toc-link" data-title="internals">
   
   Internals
@@ -367,6 +379,12 @@
                     <a href="#operation-patterns" class="toc-h2 toc-link" data-title="patterns">
   
   Patterns
+</a>
+                  </li>
+                  <li>
+                    <a href="#operation-macros" class="toc-h2 toc-link" data-title="macros">
+  
+  Macros
 </a>
                   </li>
               </ul>
@@ -491,7 +509,8 @@
 </h1>
 <p>The idea of 2.1 is: If you can&#39;t draw it, you can&#39;t code it.</p>
 
-<p>business logic framework, no routing, no rendering, no database.</p>
+<p>business logic framework, no routing, no rendering, no database.
+standards (ctx,etc)</p>
 <h1 id="activity">
   
   Activity
@@ -1228,7 +1247,15 @@ to_h</p>
   Tracing
 </h2>
 <p>To find out the exact flow when invoking one or multiple, nested activities, you can invoke an activity with tracing. Besides tracking the path the execution took, per default this also tracks incoming and outgoing state of every task, by capturing a snapshot of the <code>ctx</code> object.</p>
-<h2 id="activity-internals">
+<h2 id="activity-debugging">
+  
+  Debugging
+</h2>
+<p>Activity.to_h[:circuit]</p>
+<h2 id="activity-macro-api">
+  
+  Macro API
+</h2><h2 id="activity-internals">
   
   Internals
 </h2>
@@ -1747,6 +1774,200 @@ Orchestration</p>
 <p>The resulting <code>Memo::Create</code>&#39;s circuit is identical to the <a href="#doormat-step-before">last example</a>.</p>
 
 <p>Note how this can be used for <a href="#group">&quot;template operations&quot;</a> where the inherited class really only adds its concrete steps into the existing layout.</p>
+<h2 id="operation-macros">
+  
+  Macros
+</h2>
+<p>Macros are helper functions that generate steps along with configuration for you. They follow <a href="#activity-macro-api">activity&#39;s Macro API</a>. Most macros, such as policies, transaction support, or guards, are provided by the <a href="https://trailblazer.to/trailblazer/trailblazer-macro">trailblazer-macro gem</a>, which is completely optional. Only include it if you want to take advantage of those helpers.</p>
+<h3 id="operation-macros-wrap">
+  <div><span>Macros</span></div>
+  Wrap
+</h3>
+<blockquote>
+<p>Steps can be embraced by a <code>Wrap()</code>.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:find_model</span>
+  <span class="n">step</span> <span class="no">Wrap</span><span class="p">(</span> <span class="no">HandleUnsafeProcess</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="n">step</span> <span class="ss">:update</span>
+    <span class="n">step</span> <span class="ss">:rehash</span>
+  <span class="p">}</span>
+  <span class="n">step</span> <span class="ss">:notify</span>
+  <span class="nb">fail</span> <span class="ss">:log_error</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<blockquote>
+<p>Any callable object can be handling the actual wrapping logic.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">HandleUnsafeProcess</span>
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">call</span><span class="p">((</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">),</span> <span class="o">*</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+    <span class="k">begin</span>
+      <span class="k">yield</span> <span class="c1"># calls the wrapped steps</span>
+    <span class="k">rescue</span>
+      <span class="p">[</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span><span class="o">::</span><span class="no">Railway</span><span class="p">.</span><span class="nf">fail!</span><span class="p">,</span> <span class="p">[</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">]</span> <span class="p">]</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+</code></pre>
+<blockquote>
+<p>If an exception is caught, the <code>fail!</code> method produces a <code>Left</code> signal that will deviate the flow to the left track, resulting in <code>notify</code> not being called and a <code>failure</code> end state.</p>
+</blockquote>
+
+<p>When running one or multiple steps with critical, transactional logic, it is often desirable to wrap this section with a handler. The <code>Wrap()</code> macro allows to place steps into any kind of transaction handler that might catch exceptions, lock the database for the duration of the wrapped steps, or wrap a transaction around them.</p>
+
+<p><img src="images/wrap.png"></p>
+
+<p>You need to provide a handler which runs the wrapped section and implements the transactional code. The handler can be any callable object (or proc).</p>
+
+<p>In our example, the <code>HandleUnsafeProcess.call</code> method implements the wrapping by putting the execution of the embraced steps into a <code>begin</code>/<code>rescue</code> construct. Obviously, the implementation of the wrap is completely up to you. Note that the handler&#39;s <code>call</code> method is invoked with the <a href="#activity-interfaces-task-interface">task interface</a> plus a <code>&amp;block</code> that, when <code>yield</code>ed, invokes running the contained steps.</p>
+
+<p>The handler has to return a <a href="#activity-interfaces-task-interface">task interface return set</a>. You&#39;re free to use <code>Railway</code>&#39;s signal helpers to decide what end you want the wrapped activity to stop in. Do not forget to return other circuit arguments like <code>flow_options</code> to keep features such as tracing intact.</p>
+
+<p><aside class="notice">Technically, the wrapped section is a separate activity, where its steps are executed in the outer operation&#39;s context. This allows you to rewire the inner ends to differing outer connections.</aside></p>
+<h4 id="operation-macros-wrap-block-invocation">
+  <div><span>Macros /</span> Wrap</div>
+  Block Invocation
+</h4><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">HandleUnsafeProcess</span>
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">call</span><span class="p">((</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">),</span> <span class="o">*</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+    <span class="k">begin</span>
+      <span class="n">end_event</span><span class="p">,</span> <span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">)</span> <span class="o">=</span> <span class="k">yield</span> <span class="c1"># invokes the wrapped activity</span>
+    <span class="c1">#rescue</span>
+    <span class="c1">#...</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+<p>The block argument passed to the handler can be invoked via <code>block.call</code> or a simple <code>yield</code>. It runs the wrapped steps and returns a task interface return set if it wasn&#39;t interrupted by an exception.</p>
+
+<p><aside class="warning">The return value of this call is crucial - do not dismiss it, always make sure that a proper task interface return set is returned, even for a successful, uninterrupted invocation.</aside></p>
+<h4 id="operation-macros-wrap-return-set">
+  <div><span>Macros /</span> Wrap</div>
+  Return set
+</h4>
+<blockquote>
+<p>You can return any signal from the wrap handler.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">HandleUnsafeProcess</span>
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">call</span><span class="p">((</span><span class="n">ctx</span><span class="p">),</span> <span class="o">*</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+    <span class="k">begin</span>
+      <span class="k">yield</span> <span class="c1"># calls the wrapped steps</span>
+    <span class="k">rescue</span>
+      <span class="p">[</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span><span class="o">::</span><span class="no">Railway</span><span class="p">.</span><span class="nf">fail_fast!</span><span class="p">,</span> <span class="p">[</span><span class="n">ctx</span><span class="p">,</span> <span class="p">{}]</span> <span class="p">]</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>The returned value from the handler always has to be a <a href="#activity-interfaces-task-interface">task interface return set</a>. While this might feel cumbersome, it allows you to interpret possible outcomes from the wrapped steps, and communicate different states to the remaining, outer activity via different end events.</p>
+
+<p>For example, by returning a <code>Railway.fail_fast!</code> instead of <code>fail!</code>, you can deviate the flow to fail fast if an exception happened.</p>
+
+<p><img src="images/wrap-fail-fast.png"></p>
+
+<p>Given that the <code>rescue</code> block is hit in the <code>Wrap</code> activity, the remaining operation will be skipped, and execution will halt in the <code>fail_fast</code> end event.</p>
+<h4 id="operation-macros-wrap-transaction">
+  <div><span>Macros /</span> Wrap</div>
+  Transaction
+</h4>
+<blockquote>
+<p>Your <code>Wrap()</code> handler can also deal with transactions.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">MyTransaction</span>
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">call</span><span class="p">((</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">),</span> <span class="o">*</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="no">Sequel</span><span class="p">.</span><span class="nf">transaction</span> <span class="p">{</span> <span class="k">yield</span> <span class="p">}</span>
+
+    <span class="n">signal</span> <span class="o">=</span> <span class="n">result</span> <span class="p">?</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span><span class="o">::</span><span class="no">Railway</span><span class="p">.</span><span class="nf">pass!</span> <span class="p">:</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span><span class="o">::</span><span class="no">Railway</span><span class="p">.</span><span class="nf">fail!</span>
+
+    <span class="p">[</span> <span class="n">signal</span><span class="p">,</span> <span class="p">[</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">]</span> <span class="p">]</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+</code></pre>
+<blockquote>
+<p>Simply pass your handler into the macro call.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:find_model</span>
+  <span class="n">step</span> <span class="no">Wrap</span><span class="p">(</span> <span class="no">MyTransaction</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="n">step</span> <span class="ss">:update</span>
+    <span class="n">step</span> <span class="ss">:rehash</span>
+  <span class="p">}</span>
+  <span class="n">step</span> <span class="ss">:notify</span>
+  <span class="nb">fail</span> <span class="ss">:log_error</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>Obviously, you&#39;re not limited to <code>begin</code>/<code>rescue</code> for <code>Wrap()</code>, but can run any transactional code. Often, this macro is used in combination with ActiveRecord&#39;s or Sequel&#39;s <code>transaction</code>.</p>
+
+<p>You need to translate the transaction&#39;s return value(s) into a task interface return set.</p>
+
+<p><aside class="notice">In Trailblazer 2.0, you could simply return a boolean. This still works in 2.1, but is deprecated in favor of a more explicit return set.</aside></p>
+<h4 id="operation-macros-wrap-custom-wiring">
+  <div><span>Macros /</span> Wrap</div>
+  Custom Wiring
+</h4>
+<blockquote>
+<p>Return any <code>Signal</code> subclass from your handler to communicate state.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">MyTransaction</span>
+  <span class="nc">MyFailSignal</span> <span class="o">=</span> <span class="no">Class</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Signal</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">call</span><span class="p">((</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">),</span> <span class="o">*</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="no">Sequel</span><span class="p">.</span><span class="nf">transaction</span> <span class="p">{</span> <span class="k">yield</span> <span class="p">}</span>
+
+    <span class="n">signal</span> <span class="o">=</span> <span class="n">result</span> <span class="p">?</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span><span class="o">::</span><span class="no">Railway</span><span class="p">.</span><span class="nf">pass!</span> <span class="p">:</span> <span class="no">MyFailSignal</span>
+
+    <span class="p">[</span> <span class="n">signal</span><span class="p">,</span> <span class="p">[</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">]</span> <span class="p">]</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+</code></pre>
+<blockquote>
+<p>Use <code>Output()</code> to rewire outputs to new or existing connections.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
+  <span class="n">step</span> <span class="ss">:find_model</span>
+  <span class="n">step</span> <span class="no">Wrap</span><span class="p">(</span> <span class="no">MyTransaction</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="n">step</span> <span class="ss">:update</span>
+    <span class="n">step</span> <span class="ss">:rehash</span>
+  <span class="p">},</span>
+    <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:transaction_worked</span><span class="p">),</span>
+    <span class="no">Output</span><span class="p">(</span><span class="no">MyTransaction</span><span class="o">::</span><span class="no">MyFailSignal</span><span class="p">,</span> <span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:transaction_failed</span><span class="p">)</span>
+  <span class="n">step</span> <span class="ss">:notify</span>
+  <span class="nb">fail</span> <span class="ss">:log_error</span>
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>With <code>Wrap()</code> you&#39;re not limited to the Railway. You can return a custom signal from your handler, and wire the wrapped outputs to custom connections.</p>
+
+<p><img src="images/wrap-custom.png"></p>
+
+<p>Even though this example would never hit the <code>notify</code> step, it shows how flexible you can model wrapped sections and map different errors to different ends. It is usually best to let the <code>:success</code> end continue on the &quot;right&quot; track, leave the standard <code>:failure</code> end connected to the &quot;left&quot; track, and map additional errors to custom <code>End()</code>s.</p>
+<h4 id="operation-macros-wrap-tracing">
+  <div><span>Macros /</span> Wrap</div>
+  Tracing
+</h4><pre class="highlight ruby tab-ruby"><code><span class="n">result</span>  <span class="o">=</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">trace</span><span class="p">(</span> <span class="n">options</span> <span class="p">)</span>
+
+</code></pre><pre class="highlight ruby tab-ruby"><code><span class="n">result</span><span class="p">.</span><span class="nf">wtf?</span> <span class="c1">#=&gt;</span>
+<span class="o">|--</span> <span class="c1">#&lt;Trailblazer::Activity::Start semantic=:default&gt;</span>
+<span class="o">|--</span> <span class="n">find_model</span>
+<span class="o">|--</span> <span class="no">Wrap</span><span class="o">/</span><span class="mi">85</span>
+<span class="o">|</span>   <span class="o">|--</span> <span class="c1">#&lt;Trailblazer::Activity::Start semantic=:default&gt;</span>
+<span class="o">|</span>   <span class="o">|--</span> <span class="n">update</span>
+<span class="o">|</span>   <span class="o">|--</span> <span class="n">rehash</span>
+<span class="o">|</span>   <span class="sb">`-- #&lt;Trailblazer::Operation::Railway::End::Success semantic=:success&gt;
+|-- notify
+`</span><span class="o">--</span> <span class="c1">#&lt;Trailblazer::Operation::Railway::End::Success semantic=:success&gt;</span>
+
+</code></pre>
+<p>As always, you can use tracing to track the invocation path, even with <code>Wrap()</code>.</p>
+
+<p>Since the wrapped sequence of steps is modelled as a separate activity, tracing will display that section one level indented.</p>
 <h1 id="trailblazer">
   
   Trailblazer
