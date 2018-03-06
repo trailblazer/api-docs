@@ -2089,10 +2089,30 @@ Orchestration</p>
   <div><span>Migration Path /</span> 2.0 to 2.1</div>
   Smaller gems
 </h4>
+<blockquote>
+<p>Bundle the <code>trailblazer</code> gem if you want the full package.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="n">gem</span> <span class="s2">"trailblazer"</span>
+<span class="n">gem</span> <span class="s2">"reform"</span><span class="p">,</span> <span class="s2">"2.3.0.rc2"</span>
+</code></pre>
+<blockquote>
+<p>Use a hand-picked selection if you want to skip several gems like Reform.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="n">gem</span> <span class="s2">"trailblazer-operation"</span>
+<span class="n">gem</span> <span class="s2">"dry-validation"</span>
+<span class="n">gem</span> <span class="s2">"trailblazer-macro"</span> <span class="c1"># this will not add Reform!</span>
+</code></pre>
 <p>Trailblazer as a framework is often associated with <a href="#reform">Reform</a>, and as a service object &quot;around a form object&quot;. This is, of course, not exactly true. In order to clarify that TRB has zero coupling to Reform, we ripped out all Reform-specific macros and moved them to <a href="https://github.com/trailblazer/trailblazer-macro-contract"><code>trailblazer-macro-contract</code></a>, and all other macros to <a href="https://github.com/trailblazer/trailblazer-macro"><code>trailblazer-macro</code></a>.</p>
 
-<p>Another benefit apart from clarifying the boundaries is that all other parts of Trailblazer, such as activities and workflows, can be used without Reform.</p>
-<h4 id="trailblazer-migration-path-2-0-to-2-1-wrap">
+<p>In other words: you can leverage all other parts of Trailblazer, such as activities and workflows, without &quot;Trailblazer&quot; as a full-fledged framework.</p>
+
+<p>To have the existing behavior, where Trailblazer comes with Reform and macros, simply bundle the <code>trailblazer</code> meta gem. If you fancy using your own, minimal stack, possibly ditching Reform for <code>Dry::Validation</code> schemas or the upcoming <code>transform</code> gem, do not include the <code>trailblazer</code> gem but hand-pick.</p>
+
+<p><aside class="notice">Note that you don&#39;t even have to use <code>trailblazer-operation</code> if you&#39;re interested in the <code>activity</code> gem, only.</aside></p>
+<h4 id="trailblazer-migration-path-2-0-to-2-1-context-object-and-symbols">
+  <div><span>Migration Path /</span> 2.0 to 2.1</div>
+  Context object and symbols
+</h4><h4 id="trailblazer-migration-path-2-0-to-2-1-wrap">
   <div><span>Migration Path /</span> 2.0 to 2.1</div>
   Wrap
 </h4>
@@ -2142,7 +2162,26 @@ Orchestration</p>
 
 <p><aside class="warning">Both the signature and the return value change are soft-deprecated.</aside></p>
 
-<p><a href="#operation-macros-wrap">New <code>Wrap()</code> docs</a>.</p>
+<p><a href="#operation-wrap">New <code>Wrap()</code> docs</a>.</p>
+<h4 id="trailblazer-migration-path-2-0-to-2-1-rescue">
+  <div><span>Migration Path /</span> 2.0 to 2.1</div>
+  Rescue
+</h4>
+<blockquote>
+<p>In 2.0, it was a plain list.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">def</span> <span class="nf">my_handler</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="n">ctx</span><span class="p">)</span>
+
+<span class="k">end</span>
+</code></pre>
+<blockquote>
+<p>In 2.1, it&#39;s exception plus task interface.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">def</span> <span class="nf">my_handler</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">flow_options</span><span class="p">),</span> <span class="o">**</span><span class="p">)</span>
+
+<span class="k">end</span>
+</code></pre>
+<p>The signature for <code>Rescue()</code> handlers is now a positional argument (the exception) plus the task interface signature.</p>
 <h1 id="test">
   
   Test
