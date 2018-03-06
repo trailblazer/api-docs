@@ -4,9 +4,30 @@
 
 #### Smaller gems
 
+> Bundle the `trailblazer` gem if you want the full package.
+
+```ruby
+gem "trailblazer"
+gem "reform", "2.3.0.rc2"
+```
+
+> Use a hand-picked selection if you want to skip several gems like Reform.
+
+```ruby
+gem "trailblazer-operation"
+gem "dry-validation"
+gem "trailblazer-macro" # this will not add Reform!
+```
+
 Trailblazer as a framework is often associated with [Reform](#reform), and as a service object "around a form object". This is, of course, not exactly true. In order to clarify that TRB has zero coupling to Reform, we ripped out all Reform-specific macros and moved them to [`trailblazer-macro-contract`](https://github.com/trailblazer/trailblazer-macro-contract), and all other macros to [`trailblazer-macro`](https://github.com/trailblazer/trailblazer-macro).
 
-Another benefit apart from clarifying the boundaries is that all other parts of Trailblazer, such as activities and workflows, can be used without Reform.
+In other words: you can leverage all other parts of Trailblazer, such as activities and workflows, without "Trailblazer" as a full-fledged framework.
+
+To have the existing behavior, where Trailblazer comes with Reform and macros, simply bundle the `trailblazer` meta gem. If you fancy using your own, minimal stack, possibly ditching Reform for `Dry::Validation` schemas or the upcoming `transform` gem, do not include the `trailblazer` gem but hand-pick.
+
+***Note that you don't even have to use `trailblazer-operation` if you're interested in the `activity` gem, only.***
+
+#### Context object and symbols
 
 #### Wrap
 
@@ -58,7 +79,7 @@ We decided that the handler implementation, as a private concept, can be a bit m
 
 ***!Both the signature and the return value change are soft-deprecated.***
 
-[New `Wrap()` docs](#operation-macros-wrap).
+[New `Wrap()` docs](#operation-wrap).
 
 #### Rescue
 
