@@ -599,10 +599,10 @@ standards (ctx,etc)</p>
 <li>You can not subclass actitivies. This might sound counter-intuitive, but activity gives you the much more sustainable tool of <a href="#activity-composition">compositions</a>.</li>
 <li>Modules provide <code>module_function</code> to declare every method as a class method. This makes the module more readable and allows to use <code>method</code> to attach a module method to a step.</li>
 </ul>
-<h3 id="activity-overview-example">
-  <div><span>Overview</span></div>
+<h5 id="activity-overview-example">
+  
   Example
-</h3>
+</h5>
 <p>In the exemplary <code>Memo::Update</code> activity, the first line extends your module and imports the DSL. Activity ships with three built-in strategies to build workflows: <code>Path</code> is designed for more linear flows, <code>Railway</code> is the <a href="https://fsharpforfunandprofit.com/rop/">railway-oriented</a> two tracks flow, and <code>FastTrack</code> is the extended railway with two more &quot;fast&quot; tracks which was tried and tested in Trailblazer for two years and more.</p>
 
 <p>In the upper part sits the implementation of the actual steps. Note that these don&#39;t have to be located in the same module or class as the activity definition - this is just convenient in many cases. All methods expose the <em>step interface</em>, which is the default.</p>
@@ -668,7 +668,7 @@ standards (ctx,etc)</p>
 <p><aside class="notice">Note that the terms <em>output</em> and <em>semantic</em> are inventions of Trailblazer and not part of BPMN.</aside></p>
 
 <p>With nested activities, it&#39;s slightly different. Since the last task will be an end event, it&#39;s this very end event to decide what signal to emit. End events always <a href="#activity-event">return themselves as the signal</a>. This allows to wire a nested activity&#39;s ends to specific paths in the outer diagram, the way we&#39;ve modelled it in the example above and in the next paragraph.</p>
-<h3 id="activity-anatomy-outputs-and-semantics">
+<h3 id="activity-anatomy-example">
   <div><span>Anatomy</span></div>
   Outputs and Semantics
 </h3><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
@@ -694,45 +694,45 @@ standards (ctx,etc)</p>
 <h2 id="activity-definition">
   
   Definition
-</h2><h3 id="activity-definition-call">
+</h2><h3 id="activity-definition-example">
   <div><span>Definition</span></div>
   Call
-</h3><h3 id="activity-definition-context">
+</h3><h3 id="activity-definition-example">
   <div><span>Definition</span></div>
   Context
 </h3>
 <p>SomeModule.method(:find)</p>
-<h3 id="activity-definition-callable">
+<h3 id="activity-definition-example">
   <div><span>Definition</span></div>
   Callable
-</h3><h3 id="activity-definition-macro-api">
+</h3><h3 id="activity-definition-example">
   <div><span>Definition</span></div>
   Macro API
 </h3><h2 id="activity-strategy">
   
   Strategy
-</h2><h3 id="activity-strategy-path">
+</h2><h3 id="activity-strategy-example">
   <div><span>Strategy</span></div>
   Path
-</h3><h3 id="activity-strategy-railway">
+</h3><h3 id="activity-strategy-example">
   <div><span>Strategy</span></div>
   Railway
-</h3><h3 id="activity-strategy-fasttrack">
+</h3><h3 id="activity-strategy-example">
   <div><span>Strategy</span></div>
   FastTrack
 </h3><h2 id="activity-interfaces">
   
   Interfaces
-</h2><h3 id="activity-interfaces-task-interface">
+</h2><h3 id="activity-interfaces-example">
   <div><span>Interfaces</span></div>
   Task Interface
 </h3>
 <p>Memo::Find.outputs[:success]
 Memo::Find.outputs[:failure]</p>
-<h3 id="activity-interfaces-step-interface">
+<h3 id="activity-interfaces-example">
   <div><span>Interfaces</span></div>
   Step Interface
-</h3><h3 id="activity-interfaces-activity-interface">
+</h3><h3 id="activity-interfaces-example">
   <div><span>Interfaces</span></div>
   Activity Interface
 </h3>
@@ -749,14 +749,14 @@ to_h</p>
 <li>The <em>Merge API</em> allows to &quot;copy&quot; activities or parts of it into others and hence merge them.</li>
 <li>You can use <em>nesting</em> to call acitivies from activities and maintain cleanly encapsulated flows.</li>
 </ol>
-<h3 id="activity-composition-subprocess">
+<h3 id="activity-composition-example">
   <div><span>Composition</span></div>
   Subprocess
 </h3>
 <p>To model more complex activities and maximize reusability, a task can be an activity itself. This is called <em>nesting</em>, in BPMN, a nested activity is called <em>Subprocess</em>.</p>
 
 <p><aside class="notice">When nesting activities, <a href="#activity-output">all mechanics from <code>Output</code></a> apply, it&#39;s just the output <em>signal</em> that is slightly different.</aside></p>
-<h4 id="activity-composition-subprocess-automatic-wiring">
+<h4 id="activity-composition-example-subprocess">
   <div><span>Composition /</span> Subprocess</div>
   Automatic Wiring
 </h4>
@@ -789,7 +789,7 @@ to_h</p>
 <p><img src="images/nested-simple-railway.png"></p>
 
 <p>The automatic wiring of the inner activity works by matching semantics and colors: the inner <code>:success</code> end get connected to the <code>:success</code> path, the <code>:failure</code> end to the <code>:failure</code> path of the outer Railway.</p>
-<h4 id="activity-composition-subprocess-manual-wiring">
+<h4 id="activity-composition-example-subprocess">
   <div><span>Composition /</span> Subprocess</div>
   Manual wiring
 </h4>
@@ -823,7 +823,7 @@ to_h</p>
 <p><img src="images/nested-manual-ends.png"></p>
 
 <p>Now, all ends from the inner activity have a matching end on the outside. This helps to manage the flow better, but is not always necessary.</p>
-<h4 id="activity-composition-subprocess-connect-to-color">
+<h4 id="activity-composition-example-subprocess">
   <div><span>Composition /</span> Subprocess</div>
   Connect to color
 </h4>
@@ -846,7 +846,7 @@ to_h</p>
 <p><img src="images/nested-rewire.png"></p>
 
 <p>The <code>:id_missing</code> end is now connected to the <code>:failure</code> track, which happens to run directly into its end. Keep in mind that you can use all <a href="#activity-output">mechanics from <code>Output()</code></a> and wire nested ends to just anything.</p>
-<h4 id="activity-composition-subprocess-subprocess-macro">
+<h4 id="activity-composition-example-subprocess">
   <div><span>Composition /</span> Subprocess</div>
   Subprocess Macro
 </h4>
@@ -864,7 +864,7 @@ to_h</p>
 
 </code></pre>
 <p>The <code>activity</code> gem provides the <code>Subprocess</code> macro as a short-cut when nesting activities. It will produce an identical circuit as the one above by automatically extracting and passing <code>:outputs</code> to the DSL. You may then <a href="#activity-output">use <code>Output()</code> to reference outputs</a> in a more convenient way, and without having to connect automatically matched ones.</p>
-<h3 id="activity-composition-merge-api">
+<h3 id="activity-composition-example">
   <div><span>Composition</span></div>
   Merge API
 </h3>
@@ -887,7 +887,7 @@ to_h</p>
 <p><img src="images/merge.png"></p>
 
 <p>The merged activity will be embedded where you call <code>merge!</code>, as if you had copied its DSL calls to that position.</p>
-<h4 id="activity-composition-merge-api-templates">
+<h4 id="activity-composition-example-merge-api">
   <div><span>Composition /</span> Merge API</div>
   Templates
 </h4>
@@ -981,7 +981,7 @@ to_h</p>
 <h2 id="activity-wiring-api">
   
   Wiring API
-</h2><h3 id="activity-wiring-api-output">
+</h2><h3 id="activity-wiring-api-example">
   <div><span>Wiring API</span></div>
   Output
 </h3>
@@ -1030,7 +1030,7 @@ to_h</p>
 <p>For example, with <code>Path()</code>, a <code>:success</code> output will be wired to the next <code>task</code> call. In a <code>Railway</code>, the same happens, plus a <code>:failure</code> output will be connected to the error track for you.</p>
 
 <!-- @notoc -->
-<h4 id="activity-wiring-api-output-defaults-for-plain-task">
+<h4 id="activity-wiring-api-example-output">
   <div><span>Wiring API /</span> Output</div>
   Defaults for Plain Task
 </h4>
@@ -1068,7 +1068,7 @@ to_h</p>
 <p>In a <code>Railway()</code> or <code>FastTrack()</code> activity, the <code>step</code> method adds <code>:success</code> and <code>:failure</code>. The latter emitting a <code>Left</code> signal (middle diagram). With <code>FastTrack</code> and the <code>:fast_track</code> option, you get up to four outputs predefined (right diagram).</p>
 
 <p>Note that adding <code>:outputs</code> to a task doesn&#39;t mean they will be connected, it&#39;s the DSL&#39;s job now to wire those to the next task, unless you <a href="#activity-output-id">specify the connection explicitly</a>.</p>
-<h4 id="activity-wiring-api-output-subprocess">
+<h4 id="activity-wiring-api-example-output">
   <div><span>Wiring API /</span> Output</div>
   Subprocess
 </h4>
@@ -1109,10 +1109,10 @@ to_h</p>
 <p><img src="images/nested-connected-color.png" ></p>
 
 <p>You now have two outputs going to the same next step, which is actually fine in both BPMN and Trailblazer. It&#39;s possible to <a href="#activity-output-color">rewire by color</a>, to a <a href="(#activity-output-id)">specific next task</a>, or to an <a href="#activity-output-end">existing or new end</a>.</p>
-<h4 id="activity-wiring-api-output-output-option">
+<h4 id="activity-wiring-api-example-output">
   <div><span>Wiring API /</span> Output</div>
   Output option
-</h4><h4 id="activity-wiring-api-output-id">
+</h4><h4 id="activity-wiring-api-example-output">
   <div><span>Wiring API /</span> Output</div>
   Id
 </h4>
@@ -1136,7 +1136,7 @@ to_h</p>
 <p>In this example, if a sign in request can&#39;t be handled via Omniauth (because the user didn&#39;t attempt to sign in via Github or Facebook), the submitted email is searched, instead. If that was successful, the user is signed in.</p>
 
 <p><aside class="notice">In operations, IDs are assigned automatically.</aside></p>
-<h4 id="activity-wiring-api-output-track">
+<h4 id="activity-wiring-api-example-output">
   <div><span>Wiring API /</span> Output</div>
   Track
 </h4>
@@ -1158,10 +1158,10 @@ to_h</p>
 <p><img src="images/id-ref.png" ></p>
 
 <p>Here, the <code>find_by_email</code> task will have a <code>:success</code> output that will snap towards the next open <code>:success</code> input, which happens to be the input of <code>sign_in</code> (since the latter is placed <em>after</em>).</p>
-<h4 id="activity-wiring-api-output-end">
+<h4 id="activity-wiring-api-example-output">
   <div><span>Wiring API /</span> Output</div>
   End
-</h4><h3 id="activity-wiring-api-custom-track">
+</h4><h3 id="activity-wiring-api-example">
   <div><span>Wiring API</span></div>
   Custom Track
 </h3>
@@ -1190,19 +1190,19 @@ to_h</p>
 <p><img src="images/custom-track.png"></p>
 
 <p>The resulting circuit has three tracks. We didn&#39;t put anything on the <code>:failure</code> track, but it is still there. Note that, in a <code>Railway</code>, mapping the <code>:success</code> output does create the desired plus pole. However, the <code>:failure</code> output, per default, is still pointing to the <code>:failure</code> track and will result in deviation to it should <code>auth_err</code> or <code>reset_counter</code> return the <code>Left</code> signal.</p>
-<h3 id="activity-wiring-api-path">
+<h3 id="activity-wiring-api-example">
   <div><span>Wiring API</span></div>
   Path
 </h3>
 <blockquote>
-<p>The <code>Path()</code> helper lets you build a custom track.</p>
+<p>The <code>Path()</code> helper lets you build a custom linear track.</p>
 </blockquote>
 <pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
   <span class="c1"># ...</span>
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Path</span><span class="p">()</span> <span class="k">do</span>
     <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">)</span>
-    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:authentication_failure</span><span class="p">)</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">)</span>
   <span class="k">end</span>
 
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">)</span>
@@ -1211,12 +1211,12 @@ to_h</p>
 </code></pre>
 <p>Instead of having to pass around the track color of the <a href="#activity-custom-track">custom track</a>, you can use the <code>Path()</code> helper to branch out and build an additional linear flow.</p>
 
-<p><img src="images/custom-track.png"></p>
+<p><img src="images/simple-path.png"></p>
 
-<p>The circuit looks identical to a <a href="#activity-custom-track">custom track</a>.</p>
+<p>A path will per default end in its own end event with a random semantic. This is good for quick prototyping of a flow, to be forward-compatible and allow others to use that activity, always <a href="#activity-wiring-api-path-end-semantic">provide an end semantic</a>.</p>
 
-<p>A path will always end in an end event with a <code>:success</code> semantic, which is why the last task is explicitly connected via <code>End()</code>. This results in a track end where you define the semantic.</p>
-<h4 id="activity-wiring-api-path-end-semantic">
+<p>Note that in the new path, both <code>Left</code> and <code>Right</code> outputs of each task go to the following task, making it look as if there was only a single path.</p>
+<h4 id="activity-wiring-api-example-path">
   <div><span>Wiring API /</span> Path</div>
   End Semantic
 </h4>
@@ -1227,39 +1227,61 @@ to_h</p>
   <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
   <span class="c1"># ...</span>
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Path</span><span class="p">(</span> <span class="ss">end_semantic: :authentication_failure</span> <span class="p">)</span> <span class="k">do</span>
-    <span class="n">pass</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">)</span>
-    <span class="n">pass</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">)</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">)</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">)</span>
   <span class="k">end</span>
 
   <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">)</span>
 <span class="k">end</span>
 
 </code></pre>
-<p>The <code>Path()</code> helper accepts a <code>:end_semantic</code> option to assign a custom semantic.</p>
+<p>The <code>Path()</code> helper accepts an <code>:end_semantic</code> option to assign a custom semantic.</p>
 
-<p>The circuit looks identical to a <a href="#activity-custom-track">custom track</a>.</p>
-<h3 id="activity-wiring-api-join">
+<p><img src="images/path-end-semantic.png"></p>
+
+<p>Always assign a semantic to an end event to allow others to nest your activity and wire its outputs to further connections.</p>
+<h3 id="activity-wiring-api-example">
   <div><span>Wiring API</span></div>
   Join
-</h3><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Upsert</span>
-  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Path</span><span class="p">()</span>
+</h3><pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
   <span class="c1"># ...</span>
-
-  <span class="n">task</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Left</span><span class="p">,</span> <span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Path</span><span class="p">()</span> <span class="k">do</span>
-    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Upsert</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:create</span><span class="p">)</span>
-    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Upsert</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:populate</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:success</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="s2">"save"</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Path</span><span class="p">(</span> <span class="ss">end_id: :find_model</span> <span class="p">)</span> <span class="k">do</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">)</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">)</span>
   <span class="k">end</span>
-  <span class="n">task</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:save</span><span class="p">),</span> <span class="ss">id: </span><span class="s2">"save"</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">),</span> <span class="ss">id: :find_model</span>
 <span class="k">end</span>
 
 </code></pre>
-<p>An extra path can be joined with the outer activity by pointing the last (or any other) task to an existing task in the outer activity.</p>
+<p>An extra path can be joined with the outer activity by providing the <code>:end_id</code> option that can be any task&#39;s ID in the activity.</p>
 
-<p><img src="images/path-join.png" ></p>
-
-<p>Only when <code>find</code> returns the <code>Left</code> signal, the extra path is taken.</p>
+<p><img src="images/path.png" ></p>
 
 <p>See also: <a href="#activity-output-id">Output: ID</a></p>
+<h4 id="activity-wiring-api-example-join">
+  <div><span>Wiring API /</span> Join</div>
+  Output
+</h4>
+<blockquote>
+<p>Use <code>Output()</code> in a <code>Path()</code> to split outputs to different connections.</p>
+</blockquote>
+<pre class="highlight ruby tab-ruby"><code><span class="k">module</span> <span class="nn">Memo::Create</span>
+  <span class="kp">extend</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Activity</span><span class="o">::</span><span class="no">Railway</span><span class="p">()</span>
+  <span class="c1"># ...</span>
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:authenticate</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">Path</span><span class="p">()</span> <span class="k">do</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:auth_err</span><span class="p">)</span>
+    <span class="n">task</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:reset_counter</span><span class="p">),</span> <span class="no">Output</span><span class="p">(</span><span class="ss">:failure</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="no">End</span><span class="p">(</span><span class="ss">:counter_err</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="n">step</span> <span class="nb">method</span><span class="p">(</span><span class="ss">:find_model</span><span class="p">)</span>
+<span class="k">end</span>
+
+</code></pre>
+<p>Note that in a <code>Path()</code>, each task has a <code>:success</code> and <code>:failure</code> output. Those are usually both connected to the following task (or end event). You&#39;re free to split those into two connections using the familiar <code>Output()</code> mechanics.</p>
+
+<p><img src="images/path-output.png"></p>
 <h2 id="activity-tracing">
   
   Tracing
@@ -1278,7 +1300,7 @@ to_h</p>
   Internals
 </h2>
 <p>All code necessary to define and run activities is implemented in the <a href="https://github.com/trailblazer/trailblazer-operation"><code>activity</code> gem</a>. The gem consists of two completely decoupled components: declarative code for the DSL, and runtime code. We were thinking of physically separating them into <code>activity</code> and <code>activity-dsl</code>, but refrained from that step so far.</p>
-<h3 id="activity-internals-dsl">
+<h3 id="activity-internals-example">
   <div><span>Internals</span></div>
   DSL
 </h3>
@@ -1303,7 +1325,7 @@ to_h</p>
 <p><aside class="notice">You don&#39;t have to use our DSL, you can simply create <code>Circuit</code> objects manually, which are a bit more than a hash along with a <a href="#activity-circuit-interface"><em>circuit interface</em></a>. You can even write your own DSL. The circuit doesn&#39;t have any clue about the DSL and how it was created.</aside></p>
 
 <p>While the DSL code might look overwhelming at first with its <code>Builder</code> and <code>Normalizer</code> and <code>Finalizer</code>, it&#39;s actually pretty straight-forward. Huge parts of the activity code are written using activities themselves, since we needed workflows here, too. This greatly improves consistency and makes the code easier to read (and maintain).</p>
-<h3 id="activity-internals-runtime">
+<h3 id="activity-internals-example">
   <div><span>Internals</span></div>
   Runtime
 </h3>
@@ -1321,7 +1343,7 @@ to_h</p>
 <li>In order to use and debug Trailblazer&#39;s activities, you don&#39;t have to understand the DSL code. You will only be dealing with runtime circuits, anyway.</li>
 <li>The DSL is completely replaceable. If your company comes up with a next-gen way of defining circuits, it&#39;s a matter of following interfaces to swap DSLs.</li>
 </ul>
-<h3 id="activity-internals-magnetism">
+<h3 id="activity-internals-example">
   <div><span>Internals</span></div>
   Magnetism
 </h3>
@@ -1367,7 +1389,7 @@ to_h</p>
 <p><img src="images/action-operation.png" ></p>
 
 <p>In particular, this means that neither HTTP code nor rendering is part of an operation.</p>
-<h4 id="operation-internals-magnetism-single-entry-point">
+<h4 id="operation-internals-example-magnetism">
   <div><span>Internals /</span> Magnetism</div>
   Single Entry Point
 </h4>
@@ -1491,7 +1513,7 @@ to_h</p>
 <p>All semantics are identical, in particular, adding steps works via <code>step</code>, <code>pass</code> and <code>fail</code>. You may use <code>:pass_fast</code>, <code>:fail_fast</code> and <code>:fast_track</code> and leverage four tracks per default.</p>
 
 <p>Note that the step methods do not have to reside in the operation class, you can also use the <code>Module.method(:find_model)</code> trick <a href="#activity-FIXME-LINK">to compose logic</a> in operations.</p>
-<h3 id="operation-dsl-id">
+<h3 id="operation-dsl-example">
   <div><span>DSL</span></div>
   ID
 </h3><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Update</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
@@ -1539,10 +1561,10 @@ to_h</p>
 <h2 id="operation-debugging">
   
   Debugging
-</h2><h3 id="operation-debugging-tracing">
+</h2><h3 id="operation-debugging-example">
   <div><span>Debugging</span></div>
   Tracing
-</h3><h3 id="operation-debugging-taskwrap">
+</h3><h3 id="operation-debugging-example">
   <div><span>Debugging</span></div>
   taskWrap
 </h3><h2 id="operation-dsl-sequence-options">
@@ -1752,7 +1774,7 @@ Orchestration</p>
   Doormat Step
 </h2>
 <p>Very often, you want to have one or multiple &quot;last steps&quot; in an operation, for instance to generically log errors or success messages. We call this a <em>doormat step</em>.</p>
-<h3 id="operation-doormat-step-doormat-step-before">
+<h3 id="operation-doormat-step-example">
   <div><span>Doormat Step</span></div>
   Doormat Step: Before
 </h3><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
@@ -1772,7 +1794,7 @@ Orchestration</p>
 <p>Note that <code>:before</code> is a DSL option and not exactly related to the wiring API. Using this option, the inserted step will be &quot;moved up&quot; as if you had actually called it before the targeted <code>:before</code> step.</p>
 
 <p><img src="images/doormat-before.png"></p>
-<h3 id="operation-doormat-step-doormat-step-group">
+<h3 id="operation-doormat-step-example">
   <div><span>Doormat Step</span></div>
   Doormat Step: Group
 </h3><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
@@ -1847,7 +1869,7 @@ Orchestration</p>
 <p>The handler has to return a <a href="#activity-interfaces-task-interface">task interface return set</a>. You&#39;re free to use <code>Railway</code>&#39;s signal helpers to decide what end you want the wrapped activity to stop in. Do not forget to return other circuit arguments like <code>flow_options</code> to keep features such as tracing intact.</p>
 
 <p><aside class="notice">Technically, the wrapped section is a separate activity, where its steps are executed in the outer operation&#39;s context. This allows you to rewire the inner ends to differing outer connections.</aside></p>
-<h3 id="operation-wrap-block-invocation">
+<h3 id="operation-wrap-example">
   <div><span>Wrap</span></div>
   Block Invocation
 </h3><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">HandleUnsafeProcess</span>
@@ -1863,7 +1885,7 @@ Orchestration</p>
 <p>The block argument passed to the handler can be invoked via <code>block.call</code> or a simple <code>yield</code>. It runs the wrapped steps and returns a task interface return set if it wasn&#39;t interrupted by an exception.</p>
 
 <p><aside class="warning">The return value of this call is crucial - do not dismiss it, always make sure that a proper task interface return set is returned, even for a successful, uninterrupted invocation.</aside></p>
-<h3 id="operation-wrap-return-set">
+<h3 id="operation-wrap-example">
   <div><span>Wrap</span></div>
   Return set
 </h3>
@@ -1888,7 +1910,7 @@ Orchestration</p>
 <p><img src="images/wrap-fail-fast.png"></p>
 
 <p>Given that the <code>rescue</code> block is hit in the <code>Wrap</code> activity, the remaining operation will be skipped, and execution will halt in the <code>fail_fast</code> end event.</p>
-<h3 id="operation-wrap-transaction">
+<h3 id="operation-wrap-example">
   <div><span>Wrap</span></div>
   Transaction
 </h3>
@@ -1926,7 +1948,7 @@ Orchestration</p>
 <p>You need to translate the transaction&#39;s return value(s) into a task interface return set.</p>
 
 <p><aside class="notice">In Trailblazer 2.0, you could simply return a boolean. This still works in 2.1, but is deprecated in favor of a more explicit return set.</aside></p>
-<h3 id="operation-wrap-custom-wiring">
+<h3 id="operation-wrap-example">
   <div><span>Wrap</span></div>
   Custom Wiring
 </h3>
@@ -1968,7 +1990,7 @@ Orchestration</p>
 <p><img src="images/wrap-custom.png"></p>
 
 <p>Even though this example would never hit the <code>notify</code> step, it shows how flexible you can model wrapped sections and map different errors to different ends. It is usually best to let the <code>:success</code> end continue on the &quot;right&quot; track, leave the standard <code>:failure</code> end connected to the &quot;left&quot; track, and map additional errors to custom <code>End()</code>s.</p>
-<h3 id="operation-wrap-tracing">
+<h3 id="operation-wrap-example">
   <div><span>Wrap</span></div>
   Tracing
 </h3><pre class="highlight ruby tab-ruby"><code><span class="n">result</span>  <span class="o">=</span> <span class="no">Memo</span><span class="o">::</span><span class="no">Create</span><span class="p">.</span><span class="nf">trace</span><span class="p">(</span> <span class="n">options</span> <span class="p">)</span>
@@ -2026,7 +2048,7 @@ Orchestration</p>
 <p>Per default, if the handler was invoked, the operation will deviate to the left track.</p>
 
 <p><aside class="notice">If you do want to take another path, use <code>Wrap()</code> and return the signal that suits you. If you think that <code>Rescue()</code> should be configurable to return a different signal, <a href="https://gitter.im/trailblazer/chat">contact us</a>. We appreciate your input.</aside></p>
-<h3 id="operation-rescue-instance-method">
+<h3 id="operation-rescue-example">
   <div><span>Rescue</span></div>
   Instance method
 </h3><pre class="highlight ruby tab-ruby"><code><span class="k">class</span> <span class="nc">Memo</span><span class="o">::</span><span class="no">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
@@ -2073,7 +2095,7 @@ Orchestration</p>
   <span class="k">class</span> <span class="nc">Create</span> <span class="o">&lt;</span> <span class="no">Trailblazer</span><span class="o">::</span><span class="no">Operation</span>
   <span class="k">end</span>
 <span class="k">end</span>
-</code></pre><h3 id="trailblazer-loader-disable-loader">
+</code></pre><h3 id="trailblazer-loader-example">
   <div><span>Loader</span></div>
   Disable Loader
 </h3><pre class="highlight ruby tab-ruby"><code><span class="no">Memos</span><span class="o">::</span><span class="no">Application</span><span class="p">.</span><span class="nf">config</span><span class="p">.</span><span class="nf">trailblazer</span><span class="p">.</span><span class="nf">use_loader</span> <span class="o">=</span> <span class="kp">false</span>
@@ -2082,10 +2104,10 @@ Orchestration</p>
 <h2 id="trailblazer-migration-path">
   
   Migration Path
-</h2><h3 id="trailblazer-migration-path-2-0-to-2-1">
+</h2><h3 id="trailblazer-migration-path-example">
   <div><span>Migration Path</span></div>
   2.0 to 2.1
-</h3><h4 id="trailblazer-migration-path-2-0-to-2-1-smaller-gems">
+</h3><h4 id="trailblazer-migration-path-example-2-0-to-2-1">
   <div><span>Migration Path /</span> 2.0 to 2.1</div>
   Smaller gems
 </h4>
@@ -2109,10 +2131,10 @@ Orchestration</p>
 <p>To have the existing behavior, where Trailblazer comes with Reform and macros, simply bundle the <code>trailblazer</code> meta gem. If you fancy using your own, minimal stack, possibly ditching Reform for <code>Dry::Validation</code> schemas or the upcoming <code>transform</code> gem, do not include the <code>trailblazer</code> gem but hand-pick.</p>
 
 <p><aside class="notice">Note that you don&#39;t even have to use <code>trailblazer-operation</code> if you&#39;re interested in the <code>activity</code> gem, only.</aside></p>
-<h4 id="trailblazer-migration-path-2-0-to-2-1-context-object-and-symbols">
+<h4 id="trailblazer-migration-path-example-2-0-to-2-1">
   <div><span>Migration Path /</span> 2.0 to 2.1</div>
   Context object and symbols
-</h4><h4 id="trailblazer-migration-path-2-0-to-2-1-wrap">
+</h4><h4 id="trailblazer-migration-path-example-2-0-to-2-1">
   <div><span>Migration Path /</span> 2.0 to 2.1</div>
   Wrap
 </h4>
@@ -2163,7 +2185,7 @@ Orchestration</p>
 <p><aside class="warning">Both the signature and the return value change are soft-deprecated.</aside></p>
 
 <p><a href="#operation-wrap">New <code>Wrap()</code> docs</a>.</p>
-<h4 id="trailblazer-migration-path-2-0-to-2-1-rescue">
+<h4 id="trailblazer-migration-path-example-2-0-to-2-1">
   <div><span>Migration Path /</span> 2.0 to 2.1</div>
   Rescue
 </h4>
@@ -2206,7 +2228,7 @@ Please note that the `workflow` gem and its process engine can only be used by s
   Events
 </h2>
 <p>In Trailblazer, triggering a throwing event via the process engine always implies resuming a process that was stopped earlier. It resumes at the resume event, which is a <em>catching event</em>.</p>
-<h3 id="workflow-events-explicit-event">
+<h3 id="workflow-events-example">
   <div><span>Events</span></div>
   Explicit Event
 </h3><pre class="highlight ruby tab-ruby"><code><span class="p">{</span>
@@ -2229,7 +2251,7 @@ Please note that the `workflow` gem and its process engine can only be used by s
 <p>A setup with explicit events emulates a persistent environment, where a process runs in a &quot;real&quot; state machine from beginning to end. This is found in many Java BPMN implementations. In Trailblazer, whatsoever, until we implement a persistend process engine, we decided this semi-persistent setup is extremely flexible, quite fast and a good trade-off.</p>
 
 <p>An explicit event is always an instance of <code>Event::Throwing</code>.</p>
-<h3 id="workflow-events-implicit-event">
+<h3 id="workflow-events-example">
   <div><span>Events</span></div>
   Implicit Event
 </h3><pre class="highlight ruby tab-ruby"><code><span class="no">Trailblazer</span><span class="o">::</span><span class="no">Workflow</span><span class="o">::</span><span class="no">Event</span><span class="p">.</span><span class="nf">implicit</span><span class="p">(</span>
@@ -2289,7 +2311,7 @@ Please note that the `workflow` gem and its process engine can only be used by s
 <aside class="notice">
 
 </aside>
-<h4 id="glossary-decorator-implicit-event-test">
+<h4 id="glossary-decorator-example-implicit-event">
   <div><span>Decorator /</span> Implicit Event</div>
   Test
 </h4>
