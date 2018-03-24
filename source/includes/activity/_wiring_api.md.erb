@@ -191,19 +191,19 @@ The resulting circuit has three tracks. We didn't put anything on the `:failure`
 
 ### Path
 
-> The `Path()` helper lets you build a custom track.
+> The `Path()` helper lets you build a custom linear track.
 
 ```ruby
-<%= snippet :activity, "path", file: "docs/railway_test.rb" %>
+<%= snippet :activity, "path-simple", file: "docs/railway_test.rb" %>
 ```
 
 Instead of having to pass around the track color of the [custom track](#activity-custom-track), you can use the `Path()` helper to branch out and build an additional linear flow.
 
-<img src="/images/custom-track.png">
+<img src="/images/simple-path.png">
 
-The circuit looks identical to a [custom track](#activity-custom-track).
+A path will per default end in its own end event with a random semantic. This is good for quick prototyping of a flow, to be forward-compatible and allow others to use that activity, always [provide an end semantic](#activity-wiring-api-path-end-semantic).
 
-A path will always end in an end event with a `:success` semantic, which is why the last task is explicitly connected via `End()`. This results in a track end where you define the semantic.
+Note that in the new path, both `Left` and `Right` outputs of each task go to the following task, making it look as if there was only a single path.
 
 #### End Semantic
 
@@ -213,23 +213,39 @@ A path will always end in an end event with a `:success` semantic, which is why 
 <%= snippet :activity, "path-end", file: "docs/railway_test.rb" %>
 ```
 
-The `Path()` helper accepts a `:end_semantic` option to assign a custom semantic.
+The `Path()` helper accepts an `:end_semantic` option to assign a custom semantic.
 
-The circuit looks identical to a [custom track](#activity-custom-track).
+<img src="/images/path-end-semantic.png">
+
+Always assign a semantic to an end event to allow others to nest your activity and wire its outputs to further connections.
+
 
 ### Join
 
 ```ruby
-<%= snippet :activity, "join", collapse: "methods", file: "docs/path_test.rb" %>
+<%= snippet :activity, "path-to-id", collapse: "methods", file: "docs/railway_test.rb" %>
 ```
 
-An extra path can be joined with the outer activity by pointing the last (or any other) task to an existing task in the outer activity.
+An extra path can be joined with the outer activity by providing the `:end_id` option that can be any task's ID in the activity.
 
-<img src="/images/path-join.png" >
-
-Only when `find` returns the `Left` signal, the extra path is taken.
+<img src="/images/path.png" >
 
 See also: [Output: ID](#activity-output-id)
+
+
+#### Output
+
+> Use `Output()` in a `Path()` to split outputs to different connections.
+
+```ruby
+<%= snippet :activity, "path-output", file: "docs/railway_test.rb" %>
+```
+
+Note that in a `Path()`, each task has a `:success` and `:failure` output. Those are usually both connected to the following task (or end event). You're free to split those into two connections using the familiar `Output()` mechanics.
+
+<img src="/images/path-output.png">
+
+
 
 ## Tracing
 

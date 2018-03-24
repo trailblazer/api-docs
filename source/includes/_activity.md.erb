@@ -26,7 +26,7 @@ Per convention, activities are `module`s and not classes. A module in Ruby is ju
 * You can not subclass actitivies. This might sound counter-intuitive, but activity gives you the much more sustainable tool of [compositions](#activity-composition).
 * Modules provide `module_function` to declare every method as a class method. This makes the module more readable and allows to use `method` to attach a module method to a step.
 
-### Example
+##### Example
 
 In the exemplary `Memo::Update` activity, the first line extends your module and imports the DSL. Activity ships with three built-in strategies to build workflows: `Path` is designed for more linear flows, `Railway` is the [railway-oriented](https://fsharpforfunandprofit.com/rop/) two tracks flow, and `FastTrack` is the extended railway with two more "fast" tracks which was tried and tested in Trailblazer for two years and more.
 
